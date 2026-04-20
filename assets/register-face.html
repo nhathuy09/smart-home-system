@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+    <title>SAGE AI - Thiết lập Face ID</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --ios-blue: #007AFF;
+            --ios-green: #34C759;
+            --ios-red: #FF3B30;
+            --bg-dark: #000000;
+            --card-dark: #1C1C1E;
+        }
+
+        body {
+            margin: 0; padding: 0;
+            display: flex; justify-content: center; align-items: center;
+            min-height: 100vh;
+            background: var(--bg-dark);
+            color: #FFF;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        .register-card {
+            width: 100%; max-width: 420px;
+            text-align: center; padding: 20px;
+            animation: fadeIn 0.6s ease;
+        }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        .title { font-size: 1.8rem; font-weight: 700; margin-bottom: 8px; letter-spacing: -0.5px; }
+        .subtitle { font-size: 0.95rem; color: #8E8E93; line-height: 1.4; margin-bottom: 30px; height: 40px; }
+
+        /* FaceID Container */
+        .faceid-wrapper {
+            position: relative;
+            width: 280px; height: 280px;
+            margin: 0 auto 40px auto;
+            display: flex; align-items: center; justify-content: center;
+        }
+
+        .camera-circle {
+            width: 210px; height: 210px;
+            border-radius: 50%;
+            overflow: hidden;
+            background: #111;
+            z-index: 2;
+            border: 2px solid #2C2C2E;
+        }
+
+        #webcam { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
+
+        /* SVG Progress Ticks */
+        .progress-svg {
+            position: absolute; inset: 0;
+            transform: rotate(-90deg);
+            z-index: 1;
+        }
+
+        .tick-bg { fill: none; stroke: #2C2C2E; stroke-width: 12; stroke-dasharray: 3 6; }
+        .tick-fg {
+            fill: none; stroke: var(--ios-blue); stroke-width: 12;
+            stroke-dasharray: 3 6; stroke-dashoffset: 880;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Radar & Scan Effects */
+        .radar-scan {
+            position: absolute; inset: -5px;
+            border-radius: 50%;
+            background: conic-gradient(from 0deg, transparent 180deg, rgba(0, 122, 255, 0.2) 360deg);
+            animation: rotate 2s infinite linear;
+            display: none; z-index: 3;
+            pointer-events: none;
+        }
+
+        @keyframes rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+        /* Success Icon */
+        .success-overlay {
+            position: absolute; inset: 0;
+            display: none; align-items: center; justify-content: center;
+            z-index: 10; background: rgba(0,0,0,0.4); border-radius: 50%;
+        }
+        .checkmark {
+            width: 70px; height: 70px; border-radius: 50%;
+            background: var(--ios-green); color: #000;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 32px; animation: pop 0.4s cubic-bezier(0.17, 0.89, 0.32, 1.49);
+        }
+        @keyframes pop { 0% { transform: scale(0); } 100% { transform: scale(1); } }
+
+        /* Form & Buttons */
+        .input-group {
+            background: var(--card-dark); border-radius: 12px;
+            margin-bottom: 12px; padding: 12px 16px;
+            display: flex; align-items: center;
+        }
+        .input-group i { color: #8E8E93; margin-right: 12px; width: 20px; }
+        .input-group input {
+            background: transparent; border: none; color: white;
+            font-size: 1rem; width: 100%; outline: none;
+        }
+
+        .btn {
+            width: 100%; padding: 16px; border-radius: 14px;
+            font-size: 1.05rem; font-weight: 600; border: none;
+            cursor: pointer; transition: all 0.2s; margin-top: 10px;
+        }
+        .btn-primary { background: var(--ios-blue); color: white; }
+        .btn-primary:disabled { background: #2C2C2E; color: #48484A; }
+        .btn-link { background: transparent; color: var(--ios-blue); }
+    </style>
+</head>
+<body>
+
+    <div class="register-card">
+        <h1 class="title">Face ID</h1>
+        <p class="subtitle" id="status-text">Đảm bảo khuôn mặt nằm trong vòng tròn và đủ ánh sáng.</p>
+
+        <div class="faceid-wrapper">
+            <svg class="progress-svg" viewBox="0 0 300 300">
+                <circle cx="150" cy="150" r="140" class="tick-bg"></circle>
+                <circle id="progress-tick" cx="150" cy="150" r="140" class="tick-fg"></circle>
+            </svg>
+            
+            <div class="radar-scan" id="radar"></div>
+
+            <div class="camera-circle">
+                <video id="webcam" autoplay playsinline></video>
+                <div class="success-overlay" id="success-ui">
+                    <div class="checkmark"><i class="fa-solid fa-check"></i></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="form-ui">
+            <div class="input-group">
+                <i class="fa-solid fa-user"></i>
+                <input type="text" id="reg-name" placeholder="Tên thành viên" />
+            </div>
+            <div class="input-group">
+                <i class="fa-solid fa-shield"></i>
+                <input type="text" id="reg-role" placeholder="Vai trò (Gia đình/Khách)" />
+            </div>
+        </div>
+
+        <button id="btn-start" class="btn btn-primary">Bắt đầu thiết lập</button>
+        <button id="btn-back" class="btn btn-link" onclick="location.href='home.html'">Hủy bỏ</button>
+    </div>
+
+    <canvas id="photo-canvas" style="display: none"></canvas>
+
+<script>
+/* ================= CONFIG ================= */
+const API_ANALYZE = "http://127.0.0.1:8000/api/face/analyze";
+const API_REGISTER = "http://127.0.0.1:8000/api/auth/register-face";
+
+const MAX_STEPS = 5;
+const REQUIRED_STABLE = 3;
+const MAX_FAIL = 25;
+
+const TARGET_POSES = [
+    // Nới lỏng thành 15 độ cho dễ nhận
+    { label: "nhìn thẳng", check: (y,p)=>Math.abs(y)<15 && Math.abs(p)<15 },
+    
+    // Quay trái/phải: Bắt cả dấu âm/dương để chống lỗi lật gương
+    { label: "quay trái", check: (y)=> y < -15 || y > 15 }, 
+    { label: "quay phải", check: (y)=> y > 15 || y < -15 }, 
+    
+    // Ngước/cúi: Pitch thường không bị lật gương, nới lỏng xuống 15
+    { label: "ngẩng lên", check: (_,p)=>p > 15 },
+    { label: "cúi xuống", check: (_,p)=>p < -15 }
+];
+
+/* ================= STATE ================= */
+const STATE = {
+    IDLE: "IDLE",
+    RUNNING: "RUNNING",
+    SUCCESS: "SUCCESS",
+    FAIL: "FAIL"
+};
+
+let state = STATE.IDLE;
+let step = 0;
+let stableFrames = 0;
+let failCount = 0;
+let processing = false;
+
+/* ================= DOM ================= */
+const video = document.getElementById("webcam");
+const canvas = document.getElementById("photo-canvas");
+const statusText = document.getElementById("status-text");
+const btnStart = document.getElementById("btn-start");
+const radar = document.getElementById("radar");
+const progressTick = document.getElementById("progress-tick");
+const successUI = document.getElementById("success-ui");
+
+const regName = document.getElementById("reg-name");
+const regRole = document.getElementById("reg-role");
+
+const CIRCUMFERENCE = 2 * Math.PI * 140;
+
+/* ================= CAMERA ================= */
+async function initCamera() {
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: "user", width: 640, height: 480 }
+        });
+        video.srcObject = stream;
+    } catch (e) {
+        statusText.innerText = "Không mở được camera";
+    }
+}
+
+/* ================= UI ================= */
+function updateProgress() {
+    const offset = CIRCUMFERENCE - (step / MAX_STEPS) * CIRCUMFERENCE;
+    progressTick.style.strokeDashoffset = offset;
+}
+
+function setStatus(text, color="#FFF") {
+    statusText.innerText = text;
+    statusText.style.color = color;
+}
+
+/* ================= API ================= */
+async function analyzeFrame(blob) {
+    const form = new FormData();
+    form.append("file", blob);
+
+    try {
+        const res = await fetch(API_ANALYZE, { method: "POST", body: form });
+        return await res.json();
+    } catch {
+        return { success: false, error: "Server offline" };
+    }
+}
+
+async function uploadFrame(blob) {
+    const form = new FormData();
+    form.append("file", blob);
+    form.append("name", regName.value);
+    form.append("role", regRole.value);
+    form.append("step", step+1);
+
+    await fetch(API_REGISTER, { method: "POST", body: form });
+}
+
+/* ================= CORE LOOP ================= */
+async function loop() {
+    if (state !== STATE.RUNNING) return;
+    if (processing) return requestAnimationFrame(loop);
+
+    processing = true;
+
+    const ctx = canvas.getContext("2d");
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    ctx.drawImage(video, 0, 0);
+
+    const blob = await new Promise(res => canvas.toBlob(res, "image/jpeg", 0.8));
+    const result = await analyzeFrame(blob);
+
+    /* ===== FAIL SAFE ===== */
+    if (!result.success) {
+        failCount++;
+        setStatus("Đang tìm khuôn mặt...", "#FF3B30");
+
+        if (failCount > MAX_FAIL) {
+            state = STATE.FAIL;
+            setStatus("Không nhận diện được. Thử lại.", "#FF3B30");
+        }
+
+        processing = false;
+        return requestAnimationFrame(loop);
+    }
+
+    failCount = 0;
+
+    const { yaw, pitch, blink, depth_ok, light_ok, center_ok } = result;
+    const target = TARGET_POSES[step];
+    console.log(`Góc hiện tại -> Yaw (Trái/Phải): ${yaw.toFixed(1)} | Pitch (Lên/Xuống): ${pitch.toFixed(1)}`);
+
+    /* ===== CHECK CONDITIONS ===== */
+    if (!light_ok) {
+        setStatus("Thiếu ánh sáng", "#FF9500");
+        stableFrames = 0;
+    }
+    else if (!center_ok) {
+        setStatus("Đưa mặt vào giữa", "#FF9500");
+        stableFrames = 0;
+    }
+    else if (!depth_ok) {
+        setStatus("Phát hiện giả mạo", "#FF3B30");
+        stableFrames = 0;
+    }
+    else if (!blink && step === 0) {
+        setStatus("Hãy chớp mắt", "#0A84FF");
+        stableFrames = 0;
+    }
+    else {
+        setStatus(`Hãy ${target.label}`);
+
+        if (target.check(yaw, pitch)) {
+            stableFrames++;
+
+            if (stableFrames >= REQUIRED_STABLE) {
+                setStatus("Đã ghi nhận", "#34C759");
+
+                await uploadFrame(blob);
+
+                step++;
+                updateProgress();
+                stableFrames = 0;
+
+                if (step >= MAX_STEPS) {
+                    finish();
+                    return;
+                }
+
+                await sleep(800);
+            }
+        } else {
+            stableFrames = 0;
+        }
+    }
+
+    processing = false;
+    requestAnimationFrame(loop);
+}
+
+/* ================= CONTROL ================= */
+function start() {
+    if (!regName.value || !regRole.value) {
+        alert("Nhập thông tin trước");
+        return;
+    }
+
+    state = STATE.RUNNING;
+    btnStart.style.display = "none";
+    radar.style.display = "block";
+
+    loop();
+}
+
+function finish() {
+    state = STATE.SUCCESS;
+
+    radar.style.display = "none";
+    successUI.style.display = "flex";
+
+    setStatus("Face ID sẵn sàng", "#34C759");
+
+    if (video.srcObject) {
+        video.srcObject.getTracks().forEach(t => t.stop());
+    }
+
+    setTimeout(() => location.href = "home.html", 2000);
+}
+
+/* ================= UTIL ================= */
+function sleep(ms) {
+    return new Promise(res => setTimeout(res, ms));
+}
+
+/* ================= INIT ================= */
+btnStart.onclick = start;
+initCamera();
+updateProgress();
+</script>
+</body>
+</html>

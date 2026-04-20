@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+    <title>Cài đặt Thiết bị - GDU SmartHome</title>
+    
+    <!-- CSS Reset -->
+    <link href="/assets/css/reset.css" rel="stylesheet" />
+    <!-- Fonts and Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link href="/assets/css/home.css" rel="stylesheet" />
+    
+    <script>
+        // Check saved theme
+        if (localStorage.getItem("theme") === "dark") {
+            document.documentElement.setAttribute("data-theme", "dark");
+        }
+    </script>
+    
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            padding: 2rem 1.5rem;
+        }
+        .settings-card {
+            max-width: 600px;
+            width: 100%;
+        }
+        
+        .header-icon {
+            width: 56px; height: 56px;
+            border-radius: 1rem;
+            background: var(--bg-chat);
+            color: var(--accent-primary);
+            font-size: 1.5rem;
+            display: flex; align-items: center; justify-content: center;
+            margin-bottom: 1rem;
+            border: 1px solid #F3F4F6;
+        }
+        [data-theme="dark"] .header-icon { border-color: #4B5563; }
+
+        .title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 0.25rem;
+        }
+        .subtitle {
+            font-size: 0.875rem;
+            color: var(--text-light);
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #F3F4F6;
+        }
+        [data-theme="dark"] .subtitle { border-color: #374151; }
+
+        /* Settings Groups */
+        .setting-group {
+            margin-bottom: 2rem;
+        }
+        .group-title {
+            font-size: 0.875rem;
+            font-weight: 700;
+            color: var(--text-medium);
+            margin-bottom: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        
+        .device-row {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            background: var(--bg-chat);
+            padding: 1rem;
+            border-radius: 1rem;
+            border: 1px solid #F3F4F6;
+            margin-bottom: 0.75rem;
+        }
+        [data-theme="dark"] .device-row { background: #2D3748; border-color: #4B5563; }
+        
+        .dev-label {
+            width: 80px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text-dark);
+            flex-shrink: 0;
+        }
+        .form-control {
+            flex: 1;
+            background: var(--bg-card);
+            border: 1px solid #D1D5DB;
+            border-radius: 0.5rem;
+            padding: 0.5rem 0.75rem;
+            font-size: 0.875rem;
+            color: var(--text-dark);
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        [data-theme="dark"] .form-control { background: #374151; border-color: #4B5563; color: var(--text-light); }
+        .form-control:focus { border-color: var(--accent-primary); }
+        
+        select.form-control {
+            cursor: pointer;
+            appearance: none;
+        }
+
+        /* Buttons */
+        .controls-row {
+            display: flex; gap: 1rem; margin-top: 2rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid #F3F4F6;
+        }
+        [data-theme="dark"] .controls-row { border-color: #374151; }
+        .btn-action {
+            flex: 1;
+            display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+            padding: 0.875rem;
+            border-radius: 1rem;
+            font-weight: 600; font-size: 1rem;
+            cursor: pointer; transition: var(--transition);
+            border: none;
+            text-decoration: none;
+        }
+        .btn-action-primary {
+            background: var(--accent-primary);
+            color: white;
+            box-shadow: 0 4px 10px rgba(163, 177, 138, 0.3);
+        }
+        .btn-action-primary:hover { background: var(--accent-primary-hover); transform: translateY(-2px); }
+        
+        .btn-action-secondary {
+            background: transparent;
+            color: var(--text-medium);
+            border: 1px solid #D1D5DB;
+        }
+        [data-theme="dark"] .btn-action-secondary { border-color: #4B5563; }
+        .btn-action-secondary:hover { background: #F3F4F6; color: var(--text-dark); }
+        [data-theme="dark"] .btn-action-secondary:hover { background: #374151; color: white; }
+    </style>
+</head>
+<body>
+
+    <div class="card settings-card">
+        <div class="header-icon">
+            <i class="fa-solid fa-sliders"></i>
+        </div>
+        <h2 class="title">Tuỳ chỉnh Giao diện Thiết bị</h2>
+        <p class="subtitle">Đổi tên và cấu hình hình ảnh thiết bị hiển thị trên màn hình điều khiển.</p>
+
+        <!-- Dynamic Device Settings Form -->
+        <div id="settings-form">
+            <!-- Phòng Khách -->
+            <div class="setting-group">
+                <div class="group-title">Phòng Khách (Trang chính)</div>
+                <div class="device-row">
+                    <div class="dev-label">Thiết bị 1</div>
+                    <input type="text" id="name-living-1" class="form-control" placeholder="Tên thiết bị (VD: Đèn Khách)">
+                    <select id="type-living-1" class="form-control">
+                        <option value="light">Đèn</option>
+                        <option value="fan">Quạt</option>
+                        <option value="tv">Tivi</option>
+                        <option value="ac">Điều hoà</option>
+                        <option value="plug">Ổ cắm</option>
+                    </select>
+                </div>
+                <div class="device-row">
+                    <div class="dev-label">Thiết bị 2</div>
+                    <input type="text" id="name-living-2" class="form-control" placeholder="Tên thiết bị (VD: Quạt Khách)">
+                    <select id="type-living-2" class="form-control">
+                        <option value="light">Đèn</option>
+                        <option value="fan">Quạt</option>
+                        <option value="tv">Tivi</option>
+                        <option value="ac">Điều hoà</option>
+                        <option value="plug">Ổ cắm</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Phòng Ngủ -->
+            <div class="setting-group">
+                <div class="group-title">Phòng Ngủ</div>
+                <div class="device-row">
+                    <div class="dev-label">Thiết bị 1</div>
+                    <input type="text" id="name-room1-1" class="form-control" placeholder="Tên thiết bị (VD: Đèn Trần)">
+                    <select id="type-room1-1" class="form-control">
+                        <option value="light">Đèn</option>
+                        <option value="fan">Quạt</option>
+                        <option value="tv">Tivi</option>
+                        <option value="ac">Điều hoà</option>
+                        <option value="plug">Ổ cắm</option>
+                    </select>
+                </div>
+                <div class="device-row">
+                    <div class="dev-label">Thiết bị 2</div>
+                    <input type="text" id="name-room1-2" class="form-control" placeholder="Tên thiết bị (VD: Quạt Bàn)">
+                    <select id="type-room1-2" class="form-control">
+                        <option value="light">Đèn</option>
+                        <option value="fan">Quạt</option>
+                        <option value="tv">Tivi</option>
+                        <option value="ac">Điều hoà</option>
+                        <option value="plug">Ổ cắm</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Phòng Tắm -->
+            <div class="setting-group">
+                <div class="group-title">Phòng Tắm</div>
+                <div class="device-row">
+                    <div class="dev-label">Thiết bị 1</div>
+                    <input type="text" id="name-room2-1" class="form-control" placeholder="Tên thiết bị (VD: Đèn Gương)">
+                    <select id="type-room2-1" class="form-control">
+                        <option value="light">Đèn</option>
+                        <option value="fan">Quạt hút</option>
+                        <option value="heater">Bình nóng lạnh</option>
+                        <option value="plug">Ổ cắm</option>
+                    </select>
+                </div>
+                <div class="device-row">
+                    <div class="dev-label">Thiết bị 2</div>
+                    <input type="text" id="name-room2-2" class="form-control" placeholder="Tên thiết bị (VD: Quạt Hút)">
+                    <select id="type-room2-2" class="form-control">
+                        <option value="light">Đèn</option>
+                        <option value="fan">Quạt hút</option>
+                        <option value="heater">Bình nóng lạnh</option>
+                        <option value="plug">Ổ cắm</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Nhà Bếp -->
+            <div class="setting-group">
+                <div class="group-title">Nhà Bếp</div>
+                <div class="device-row">
+                    <div class="dev-label">Thiết bị 1</div>
+                    <input type="text" id="name-kitchen-1" class="form-control" placeholder="Tên thiết bị (VD: Quạt Hút)">
+                    <select id="type-kitchen-1" class="form-control">
+                        <option value="light">Đèn</option>
+                        <option value="fan">Quạt</option>
+                        <option value="fridge">Tủ lạnh</option>
+                        <option value="microwave">Lò vi sóng</option>
+                        <option value="plug">Ổ cắm</option>
+                    </select>
+                </div>
+                <div class="device-row">
+                    <div class="dev-label">Thiết bị 2</div>
+                    <input type="text" id="name-kitchen-2" class="form-control" placeholder="Tên thiết bị (VD: Đèn Bếp)">
+                    <select id="type-kitchen-2" class="form-control">
+                        <option value="light">Đèn</option>
+                        <option value="fan">Quạt</option>
+                        <option value="fridge">Tủ lạnh</option>
+                        <option value="microwave">Lò vi sóng</option>
+                        <option value="plug">Ổ cắm</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="controls-row">
+            <a href="home.html" class="btn-action btn-action-secondary">Hủy</a>
+            <button id="btn-save" class="btn-action btn-action-primary">
+                <i class="fa-solid fa-floppy-disk"></i> Lưu cài đặt
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Danh sách ID cấu hình cần lưu
+        const configKeys = [
+            "living-1", "living-2", "room1-1", "room1-2", "room2-1", "room2-2", "kitchen-1", "kitchen-2"
+        ];
+
+        // 1. Tải cài đặt hiện tại từ PostgreSQL (API)
+        async function loadSettings() {
+            try {
+                const res = await fetch("http://127.0.0.1:8000/api/settings");
+                if (res.ok) {
+                    const json = await res.json();
+                    if (json.status === "success" && json.data) {
+                        const dbData = json.data;
+                        configKeys.forEach(key => {
+                            if (dbData[key]) {
+                                const nameEl = document.getElementById(`name-${key}`);
+                                const typeEl = document.getElementById(`type-${key}`);
+                                if (nameEl && dbData[key].name) nameEl.value = dbData[key].name;
+                                if (typeEl && dbData[key].type) typeEl.value = dbData[key].type;
+                                
+                                // Lưu đệm vào localStorage để trang home load nhanh
+                                localStorage.setItem(`dev_config_${key}`, JSON.stringify(dbData[key]));
+                            }
+                        });
+                        return; // Done
+                    }
+                }
+            } catch (error) {
+                console.warn("Không kết nối được server, dùng localStorage", error);
+            }
+            
+            // Fallback to localStorage if API fails
+            configKeys.forEach(key => {
+                const savedData = localStorage.getItem(`dev_config_${key}`);
+                if (savedData) {
+                    try {
+                        const parsed = JSON.parse(savedData);
+                        const nameEl = document.getElementById(`name-${key}`);
+                        const typeEl = document.getElementById(`type-${key}`);
+                        if (nameEl && parsed.name) nameEl.value = parsed.name;
+                        if (typeEl && parsed.type) typeEl.value = parsed.type;
+                    } catch (e) { }
+                }
+            });
+        }
+
+        // 2. Lưu cài đặt vào PostgreSQL
+        async function saveSettings() {
+            const btnSave = document.getElementById("btn-save");
+            btnSave.disabled = true;
+            btnSave.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang lưu Database...';
+
+            const payloadList = [];
+            configKeys.forEach(key => {
+                const nameVal = document.getElementById(`name-${key}`).value.trim();
+                const typeVal = document.getElementById(`type-${key}`).value;
+                if (nameVal) {
+                    payloadList.push({ device_id: key, name: nameVal, type: typeVal });
+                    // Lưu offline đồng thời
+                    localStorage.setItem(`dev_config_${key}`, JSON.stringify({ name: nameVal, type: typeVal }));
+                }
+            });
+
+            try {
+                const res = await fetch("http://127.0.0.1:8000/api/settings", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ settings: payloadList })
+                });
+
+                if (res.ok) {
+                    localStorage.setItem("device_names_updated", Date.now());
+                    btnSave.innerHTML = '<i class="fa-solid fa-check"></i> Đã Lưu Database Thành Công';
+                    btnSave.style.background = "var(--accent-green)";
+                    setTimeout(() => window.location.href = "home.html", 800);
+                    return;
+                }
+            } catch (error) {
+                console.error("Lỗi khi lưu DB:", error);
+            }
+
+            // Nếu lỗi server DB
+            localStorage.setItem("device_names_updated", Date.now());
+            btnSave.innerHTML = '<i class="fa-solid fa-cloud-arrow-down"></i> Lưu Offline thành công (Cần bật DB)';
+            btnSave.style.background = "var(--accent-orange)";
+            setTimeout(() => window.location.href = "home.html", 1500);
+        }
+
+        document.getElementById("btn-save").addEventListener("click", saveSettings);
+
+        // Khởi động
+        loadSettings();
+    </script>
+</body>
+</html>

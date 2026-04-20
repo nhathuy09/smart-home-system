@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multi-Agent Smart Home</title>
+    <!-- CSS Reset -->
+    <link href="/assets/css/reset.css" rel="stylesheet" />
+    <!-- Fonts and Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link href="/assets/css/home.css" rel="stylesheet" />
+</head>
+
+<body>
+    <!-- Main wrapper -->
+    <div class="dashboard-wrapper">
+
+        <!-- HEADER BLOCK -->
+        <header class="header">
+            <div class="header-left">
+                <div class="header-logo">
+                    <img src="" alt="Logo"
+                        onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+                    <div class="icon-circle" style="display: none;">
+                        <i class="fa-solid fa-house"></i>
+                    </div>
+                </div>
+                <div class="header-title">
+                    <h1 class="content">SMART HOME</h1>
+                    <p class="content"><span class="status-dot"></span> Multi-Agent AI System</p>
+                </div>
+            </div>
+
+            <div class="header-right">
+                <button class="icon-btn" id="theme-toggle" title="Chuyển giao diện">🌙</button>
+                <div class="greeting">Xin chào, Huy! <span>👋</span></div>
+                <div class="user-profile" id="user-avatar">
+                    <img src="" alt="User" class="avatar-img"
+                        onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+                    <div class="avatar-text" style="display: none;">HU</div>
+
+                    <div id="dropdown" class="dropdown-menu">
+                        <a href="/assets/settings.html"><i class="fa-solid fa-gear"
+                                style="color: var(--text-light); width: 20px; text-align: center;"></i> Cài đặt</a>
+                        <a href="/assets/register-face.html"><i class="fa-solid fa-face-smile"
+                                style="color: var(--text-light); width: 20px; text-align: center;"></i> Đăng ký khuôn
+                            mặt</a>
+                        <a href="/assets/history.html"><i class="fa-solid fa-clock-rotate-left"
+                                style="color: var(--text-light); width: 20px; text-align: center;"></i> Lịch sử</a>
+                        <hr>
+                        <a href="/assets/index.html"
+                            onclick="localStorage.removeItem('isAuthenticated'); localStorage.removeItem('username');"
+                            class="text-danger"><i class="fa-solid fa-arrow-right-from-bracket"
+                                style="width: 20px; text-align: center;"></i> Đăng xuất</a>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- SENSOR TICKER / TOP CARDS -->
+        <section class="sensor-grid">
+            <!-- Nhiệt độ -->
+            <div class="sensor-card">
+                <p class="sensor-label">NHIỆT ĐỘ</p>
+                <div class="sensor-value">
+                    <span id="val-temp">--</span> <span class="unit">°C</span>
+                </div>
+                <div class="sensor-dot dot-orange"></div>
+                <i class="fa-solid fa-temperature-half bg-icon icon-orange"></i>
+            </div>
+
+            <!-- Độ ẩm -->
+            <div class="sensor-card">
+                <p class="sensor-label">ĐỘ ẨM</p>
+                <div class="sensor-value">
+                    <span id="val-humi">--</span> <span class="unit">%</span>
+                </div>
+                <div class="sensor-dot dot-green"></div>
+                <i class="fa-solid fa-droplet bg-icon icon-green"></i>
+            </div>
+
+            <!-- KQ Khí -->
+            <div class="sensor-group-v">
+                <div class="sensor-card">
+                    <p class="sensor-label">CHẤT LƯỢNG KHÍ</p>
+                    <div class="air-quality-stats-grid">
+                        <div class="k-stat-block">
+                            <p class="k-stat-label">eCO2</p>
+                            <div class="k-stat-value text-green"><span id="val-eco2">--</span> <small>ppm</small></div>
+                        </div>
+                        <div class="k-stat-block">
+                            <p class="k-stat-label">TVOC</p>
+                            <div class="k-stat-value text-green"><span id="val-tvoc">--</span> <small>ppb</small></div>
+                        </div>
+                    </div>
+                    <div class="sensor-dot dot-gray"></div>
+                    <i class="fa-solid fa-wind bg-icon icon-gray"></i>
+                </div>
+                <div class="air-alert-card status-good" id="air-alert">
+                    <i class="fa-solid fa-circle-check"></i>
+                    <span id="air-alert-text">Đang phân tích không khí...</span>
+                </div>
+            </div>
+
+            <!-- An ninh -->
+            <div class="sensor-card card-security">
+                <p class="sensor-label">AN NINH</p>
+                <div class="sensor-value security-text" id="val-security"
+                    style="font-size: 1.5rem; display: flex; align-items: center; gap: 8px; margin-top: 5px;">
+                    An Toàn <i class="fa-solid fa-shield-check"></i>
+                </div>
+                <div class="sensor-dot dot-green"></div>
+                <i class="fa-solid fa-shield bg-icon icon-green"></i>
+            </div>
+
+            <!-- Độ sáng -->
+            <div class="sensor-card">
+                <p class="sensor-label">ĐỘ SÁNG</p>
+                <div class="sensor-value">
+                    <span id="val-lux">--</span> <span class="unit">Lux</span>
+                </div>
+                <div class="sensor-dot dot-orange"></div>
+                <i class="fa-regular fa-sun bg-icon icon-orange"></i>
+            </div>
+
+            <!-- Điều khiển nhanh (Quạt & Đèn - Phòng Khách) -->
+            <div class="sensor-card quick-control-card">
+                <div class="qc-header-row">
+                    <p class="sensor-label" style="font-size: 0.70rem; margin-bottom: 0;">PHÒNG KHÁCH</p>
+                    <div class="qc-motion-row">
+                        <span class="stat-dot dot-gray" id="dot-motion-living"></span>
+                        <span id="val-motion-living"
+                            style="font-size: 0.72rem; color: var(--text-light); font-weight: 500;">Không người</span>
+                    </div>
+                </div>
+                <div class="quick-controls" style="margin-top: 0.4rem;">
+                    <div class="qc-item">
+                        <div id="dev-bg-living-1" class="device-icon icon-purple qc-icon">
+                            <i id="dev-icon-living-1" class="fa-solid fa-tv"></i>
+                        </div>
+                        <div class="qc-text">
+                            <span id="dev-name-living-1" class="qc-device-name">Đèn Khách</span>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" checked class="toggle-checkbox" id="toggle-7">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div class="qc-item">
+                        <div id="dev-bg-living-2" class="device-icon icon-blue qc-icon">
+                            <i id="dev-icon-living-2" class="fa-solid fa-fan"></i>
+                        </div>
+                        <div class="qc-text">
+                            <span id="dev-name-living-2" class="qc-device-name">Quạt Khách</span>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" class="toggle-checkbox" id="toggle-8">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- MULTI-COLUMN LAYOUT -->
+        <section class="main-grid">
+
+            <!-- COLUMN 1: Room Control -->
+            <div class="column">
+                <div class="card room-card">
+                    <div class="card-header space-between border-bottom">
+                        <div class="card-title">
+                            <div class="title-icon icon-gray"><i class="fa-solid fa-bed"></i></div>
+                            <h2>Phòng Ngủ</h2>
+                        </div>
+                        <div class="carousel-controls">
+                            <button id="room-prev"><i class="fa-solid fa-chevron-left"></i></button>
+                            <div class="dots" id="room-dots"><span class="active"></span><span></span></div>
+                            <button id="room-next"><i class="fa-solid fa-chevron-right"></i></button>
+                        </div>
+                    </div>
+
+                    <div id="room-stack">
+                        <!-- PHÒNG NGỦ -->
+                        <div class="room-slide is-active">
+                            <div class="room-stats">
+                                <div class="stat-pill"><i class="fa-solid fa-temperature-half"></i> <span
+                                        id="val-temp-room1">--</span>°C</div>
+                                <div class="stat-pill"><i class="fa-solid fa-droplet"></i> <span
+                                        id="val-humi-room1">--</span>%</div>
+                                <div class="stat-pill"><i class="fa-regular fa-sun"></i> <span
+                                        id="val-lux-room1">--</span> Lux</div>
+                                <div class="stat-pill" id="pill-motion-room1"><span class="stat-dot dot-green"
+                                        id="dot-motion-room1"></span> <span id="val-motion-room1">Có người</span></div>
+                            </div>
+
+                            <div class="device-list">
+                                <div class="device-item">
+                                    <div class="device-info">
+                                        <div id="dev-bg-room1-1" class="device-icon icon-yellow"><i
+                                                id="dev-icon-room1-1" class="fa-regular fa-lightbulb"></i></div>
+                                        <span id="dev-name-room1-1">Đèn Trần</span>
+                                    </div>
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" checked class="toggle-checkbox" id="toggle-1">
+                                        <span class="slider"></span>
+                                    </label>
+                                </div>
+                                <div class="device-item">
+                                    <div class="device-info">
+                                        <div id="dev-bg-room1-2" class="device-icon icon-blue"><i id="dev-icon-room1-2"
+                                                class="fa-solid fa-fan"></i></div>
+                                        <span id="dev-name-room1-2">Quạt Bàn</span>
+                                    </div>
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" class="toggle-checkbox" id="toggle-2">
+                                        <span class="slider"></span>
+                                    </label>
+                                </div>
+                                <div class="device-item">
+                                    <div class="device-info">
+                                        <div id="dev-bg-room1-3" class="device-icon icon-teal"><i id="dev-icon-room1-3"
+                                                class="fa-solid fa-wind"></i></div>
+                                        <div>
+                                            <span id="dev-name-room1-3" style="font-weight:700;">Cửa Sổ</span>
+                                            <p id="dev-status-room1-3"
+                                                style="font-size:0.7rem; color:var(--text-light); margin:0;">Đã đóng</p>
+                                        </div>
+                                    </div>
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" class="toggle-checkbox" id="toggle-9">
+                                        <span class="slider"></span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div> <!-- end phòng ngủ -->
+
+                        <!-- PHÒNG TẮM -->
+                        <div class="room-slide">
+                            <div class="room-stats">
+                                <div class="stat-pill" id="pill-motion-room2"><span class="stat-dot dot-gray"
+                                        id="dot-motion-room2"></span> <span id="val-motion-room2">Không có</span></div>
+                            </div>
+
+                            <div class="device-list">
+                                <div class="device-item">
+                                    <div class="device-info">
+                                        <div id="dev-bg-room2-1" class="device-icon icon-yellow"><i
+                                                id="dev-icon-room2-1" class="fa-regular fa-lightbulb"></i></div>
+                                        <span id="dev-name-room2-1">Đèn Gương</span>
+                                    </div>
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" class="toggle-checkbox" id="toggle-5">
+                                        <span class="slider"></span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div> <!-- end phòng tắm -->
+                    </div> <!-- end room-stack -->
+                </div>
+
+                <!-- Kitchen Card -->
+                <div class="card kitchen-card">
+                    <div class="card-header space-between">
+                        <div class="card-title text-orange">
+                            <div class="title-icon icon-orange-light"><i class="fa-solid fa-fire-burner"></i></div>
+                            <h2>Nhà Bếp</h2>
+                        </div>
+                        <div class="header-status" style="display: flex; gap: 8px; align-items: center;">
+                            <div class="stat-pill" id="pill-motion-kitchen"><span class="stat-dot dot-gray"
+                                    id="dot-motion-kitchen"></span> <span id="val-motion-kitchen"
+                                    style="font-size: 0.7rem;">Không người</span></div>
+                            <span class="badge badge-warning" style="padding: 4px 8px;"><span class="dot"></span> CẢNH
+                                BÁO</span>
+                        </div>
+                    </div>
+
+                    <div class="kitchen-body">
+                        <div class="kitchen-stats-container">
+                            <div class="k-stat-block">
+                                <p class="k-stat-label">KHÍ GAS</p>
+                                <div class="k-stat-value text-orange"><span id="val-gas-kitchen">358</span>
+                                    <small>ppm</small>
+                                </div>
+                                <i class="fa-solid fa-fire-burner k-stat-icon"></i>
+                            </div>
+                            <div class="k-stat-block">
+                                <p class="k-stat-label">NHIỆT ĐỘ</p>
+                                <div class="k-stat-value text-red"><span id="val-temp-kitchen">--</span>
+                                    <small>°C</small>
+                                </div>
+                                <i class="fa-solid fa-temperature-half k-stat-icon"></i>
+                            </div>
+                            <div class="k-stat-block">
+                                <p class="k-stat-label">ĐỘ ẨM</p>
+                                <div class="k-stat-value text-blue"><span id="val-humi-kitchen">--</span>
+                                    <small>%</small>
+                                </div>
+                                <i class="fa-solid fa-droplet k-stat-icon"></i>
+                            </div>
+                        </div>
+                        <div class="kitchen-devices">
+                            <div class="k-device-item">
+                                <div class="device-info">
+                                    <i id="dev-icon-kitchen-1" class="fa-solid fa-fan icon-gray-fade"></i>
+                                    <span id="dev-name-kitchen-1" class="k-device-name">Quạt Hút</span>
+                                </div>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" checked class="toggle-checkbox" id="toggle-4">
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                            <div class="k-device-item">
+                                <div class="device-info">
+                                    <i id="dev-icon-kitchen-2" class="fa-regular fa-lightbulb icon-yellow"></i>
+                                    <span id="dev-name-kitchen-2" class="k-device-name">Đèn Bếp</span>
+                                </div>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" class="toggle-checkbox" id="toggle-3">
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- COLUMN 2: Camera View -->
+            <div class="column">
+                <div class="card camera-card">
+                    <div class="card-header space-between">
+                        <h2 class="card-title"><i class="fa-solid fa-video icon-gray-fade"></i> Cổng Chính</h2>
+                        <span class="badge badge-offline" id="cam-status-badge"><span class="dot"></span> OFFLINE</span>
+                    </div>
+
+                    <div class="camera-view">
+                        <div class="cam-icon"><i class="fa-solid fa-video-slash"></i></div>
+                        <p class="cam-status" id="cam-status-text">CAMERA OFFLINE</p>
+                        <button class="btn-primary" id="btn-reconnect-cam"><i class="fa-solid fa-play"></i> Kết nối
+                            lại</button>
+                        <span class="cam-label">CAM_01_FRONT</span>
+                    </div>
+
+                    <!-- Khóa Cửa Chính -->
+                    <div class="door-lock-bar">
+                        <div class="device-info">
+                            <div id="dev-bg-door-main" class="device-icon icon-red"><i id="dev-icon-door-main"
+                                    class="fa-solid fa-lock"></i></div>
+                            <div>
+                                <span id="dev-name-door-main"
+                                    style="font-weight: 700; font-size: 0.875rem; color: var(--text-dark);">Khóa Cửa
+                                    Chính</span>
+                                <p id="door-status-text"
+                                    style="font-size: 0.7rem; color: var(--text-light); margin: 0;">Đang khóa</p>
+                            </div>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" checked class="toggle-checkbox" id="toggle-6">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+
+                    <button class="btn-outline" id="btn-expand-cam"><i class="fa-solid fa-plus"></i> Mở Rộng
+                        Camera</button>
+                </div>
+            </div>
+
+            <!-- COLUMN 3: AI Agent Chat -->
+            <div class="column">
+                <div class="card agent-card">
+                    <div class="card-header border-bottom">
+                        <div class="agent-avatar">
+                            <div class="brain-icon"><i class="fa-solid fa-brain"></i></div>
+                            <span class="online-dot"></span>
+                        </div>
+                        <div class="agent-info">
+                            <h2>Agent Gemini</h2>
+                            <p>Trợ lý Đa Tác Vụ đang hoạt động</p>
+                        </div>
+                        <button class="close-chat" id="close-chat" title="Đóng chat">&times;</button>
+                    </div>
+
+                    <div class="chat-area" id="chat-content">
+                        <div class="chat-message chat-message--bot">
+                            <div class="bot-icon"><i class="fa-solid fa-robot"></i></div>
+                            <div class="message-bubble message-bubble--bot">Hệ thống đã khởi động thành công.</div>
+                        </div>
+                    </div>
+
+                    <div class="chat-input-wrapper">
+                        <textarea placeholder="Gõ lệnh điều khiển nhà..." class="chat-input" id="ai_input"
+                            rows="1"></textarea>
+                        <button class="btn-voice" id="btn_voice_ai" title="Nhấn để nói"><i
+                                class="fa-solid fa-microphone"></i></button>
+                        <button class="btn-send" id="btn_send_ai"><i class="fa-solid fa-paper-plane"></i></button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Chat Bubble (Mobile only) -->
+        <div class="chat-bubble" id="chat-bubble" title="Chat với Gemini">
+            <i class="fa-solid fa-comment-dots"></i>
+            <span class="bubble-notification">1</span>
+        </div>
+    </div>
+
+    <!-- Camera Expansion Modal -->
+    <div id="cam-modal" class="modal-overlay">
+        <div class="modal-content cam-modal-content">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <i class="fa-solid fa-video"></i>
+                    <h2>Giám sát Camera Toàn Cảnh</h2>
+                </div>
+                <button class="close-modal" id="close-cam-modal" title="Đóng">&times;</button>
+            </div>
+
+            <div class="modal-body">
+                <div class="cam-main-viewport" id="cam-viewport">
+                    <div class="cam-placeholder" id="cam-loading-view">
+                        <i class="fa-solid fa-spinner fa-spin"></i>
+                        <p>Đang kết nối camera ESP32...</p>
+                    </div>
+                    <div class="cam-live-view hidden" id="cam-real-view">
+                        <img id="video-stream" src="" alt="Camera Stream"
+                            style="width: 100%; height: auto; border-radius: 1rem; display: block; margin: auto;">
+                        <div class="scan-line"></div>
+                    </div>
+                    <div class="cam-overlay-info">
+                        <span class="cam-name-tag" id="active-cam-name">CAM_01 - CỔNG CHÍNH [ESP32-CAM]</span>
+                        <span class="cam-time-tag" id="cam-modal-time">--:--:--</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mqtt/5.3.4/mqtt.min.js"></script>
+    <script src="/assets/js/smh.js"></script>
+</body>
+
+</html>

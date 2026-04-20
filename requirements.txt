@@ -1,0 +1,32 @@
+
+# --- 1. Core Web Framework (API & Server) ---
+fastapi>=0.100.0
+uvicorn[standard]>=0.23.0
+python-multipart>=0.0.6    # Bắt buộc để dùng UploadFile, File, Form
+pydantic[email]>=2.0.0     # Dùng cho EmailStr và validate dữ liệu
+
+# --- 2. Database & Security ---
+asyncpg>=0.28.0            # Driver kết nối PostgreSQL bất đồng bộ cực nhanh
+bcrypt>=4.0.1              # Thuật toán băm mật khẩu
+python-dotenv>=1.0.0       # Đọc biến môi trường từ file .env
+
+# --- 3. IoT & Background Tasks ---
+paho-mqtt>=1.6.1           # Giao tiếp với Mosquitto MQTT Broker
+APScheduler>=3.10.4        # Lên lịch tác vụ ngầm (Cron jobs)
+
+# --- 4. AI & Computer Vision ---
+google-adk       # Tải biến môi trường (API keys)
+pydantic>=2.0.0
+
+# --- 5. AI Vision Node & Worker ---
+opencv-python-headless>=4.8.0  # Xử lý ảnh/video (dùng headless cho nhẹ nếu chạy trên server/Raspberry Pi không màn hình)
+numpy>=1.24.0                  # Tính toán ma trận cho ảnh và vector
+onnxruntime>=1.15.0            # Core chạy model AI (InsightFace cần cái này)
+insightface>=0.7.3             # Trích xuất đặc trưng khuôn mặt (Face Embedding)
+faiss-cpu>=1.7.4               # Thư viện của Meta dùng để so khớp vector cực nhanh (hoặc faiss-gpu nếu anh có card rời)
+psycopg2-binary>=2.9.9         # Driver kết nối PostgreSQL (bản binary cài cho nhanh)
+websocket-client>=1.6.1        # Giao tiếp WebSocket đồng bộ (khác với websockets bất đồng bộ)
+paho-mqtt>=1.6.1               # MQTT client
+python-dotenv>=1.0.0           # Đọc file config .env
+aiohttp>=3.8.5                 # Gọi API HTTP bất đồng bộ cực nhanh
+

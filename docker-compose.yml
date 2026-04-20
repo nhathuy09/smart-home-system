@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  # 1. NODE-RED
+  nodered:
+    image: nodered/node-red:latest
+    container_name: smarthome_nodered
+    restart: always
+    environment:
+      - TZ=Asia/Ho_Chi_Minh
+    ports:
+      - "1880:1880"
+      - "1881:1881"  # MQTT cho ESP32
+      - "9001:9001"  # MQTT WebSockets cho Web
+    volumes:
+      - nodered_data:/data
+
+  # 2. FASTAPI & AI APP
+  app:
+    build: .
+    container_name: smarthome_app
+    restart: always
+    ports:
+      - "8000:8000"
+    environment:
+      - TZ=Asia/Ho_Chi_Minh
+    env_file:
+      - .env
+    volumes:
+      - .:/app
+      # Lưu Model AI vào ổ cứng VPS để không phải tải lại khi restart container
+      - ai_models:/root/.insightface/models 
+
+volumes:
+  nodered_data:
+  ai_models: # Lưu trữ model buffalo_l của Huy

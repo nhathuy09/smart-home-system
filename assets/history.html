@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+    <title>Lịch sử Hoạt động - GDU SmartHome</title>
+    
+    <!-- CSS Reset -->
+    <link href="/assets/css/reset.css" rel="stylesheet" />
+    <!-- Fonts and Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link href="/assets/css/home.css" rel="stylesheet" />
+    
+    <script>
+        // Check saved theme
+        if (localStorage.getItem("theme") === "dark") {
+            document.documentElement.setAttribute("data-theme", "dark");
+        }
+    </script>
+    
+    <!-- Custom CSS -->
+    <link href="/assets/css/history.css" rel="stylesheet" />
+</head>
+<body>
+
+    <div class="card history-card">
+        <div class="header-icon">
+            <i class="fa-solid fa-clock-rotate-left"></i>
+        </div>
+        <h2 class="title">Lịch sử Hoạt động</h2>
+        <div class="subtitle">
+            <span>Ghi nhận các thao tác điều khiển thiết bị gần đây.</span>
+            <button class="btn-refresh" id="btn-refresh" onclick="fetchHistory()"><i class="fa-solid fa-rotate-right"></i> Làm mới</button>
+        </div>
+
+        <div class="filter-bar">
+            <div class="search-container">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text" id="search-input" class="search-input" placeholder="Tìm thiết bị hoặc người thao tác...">
+            </div>
+            <div class="filter-chips" id="filter-chips">
+                <button class="filter-chip active" data-filter="all">Tất cả</button>
+                <button class="filter-chip" data-filter="on">Thiết bị Bật</button>
+                <button class="filter-chip" data-filter="off">Thiết bị Tắt</button>
+                <button class="filter-chip" data-filter="face">Face ID</button>
+            </div>
+        </div>
+
+        <div class="timeline-wrapper">
+            <div id="timeline-container" class="timeline">
+                <!-- Timeline items will be injected here -->
+                <div class="empty-state">
+                    <i class="fa-solid fa-spinner fa-spin"></i>
+                    <p>Đang tải dữ liệu lịch sử...</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="controls-row">
+            <a href="home.html" class="btn-action-secondary"><i class="fa-solid fa-arrow-left"></i> Quay lại Bảng điều khiển</a>
+        </div>
+    </div>
+
+    <script>
+        function formatTime(dateString) {
+            if (!dateString) return "Không rõ thời gian";
+            const date = new Date(dateString);
+            if (isNaN(date.getTime())) return "Định dạng sai";
+
+            const now = new Date();
+            const diffMs = now - date;
+            const diffMins = Math.floor(diffMs / 60000);
+            
+            if (diffMins < 1) return "Vừa xong";
+            if (diffMins < 60) return `${diffMins} phút trước`;
+            if (diffMins < 1440) return `${Math.floor(diffMins / 60)} giờ trước`;
+            
+            // Format HH:MM - DD/MM
+            const hours = String(date.getHours()).padStart(2, '0');
+            const mins = String(date.getMinutes()).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            return `${hours}:${mins} - ${day}/${month}`;
+        }
+
+        async function fetchHistory() {
+            const container = document.getElementById('timeline-container');
+            const refreshBtn = document.getElementById('btn-refresh');
+            refreshBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang tải...';
+            
+            try {
+                const res = await fetch("http://127.0.0.1:8000/api/history?limit=50");
+                if (res.ok) {
+                    const json = await res.json();
+                    const data = json.data;
+                    
+                    if (!data || data.length === 0) {
+                        allHistoryData = [];
+                        renderHistory([]);
+                    } else {
+                        allHistoryData = data;
+                        applyFilters();
+                    }
+                } else {
+                    throw new Error("Lỗi Server");
+                }
+            } catch (error) {
+                console.error(error);
+                container.innerHTML = `
+                    <div class="empty-state" style="color: var(--accent-orange);">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                        <p>Không thể kết nối đến Database hoặc Server đang tắt.</p>
+                    </div>
+                `;
+            } finally {
+                refreshBtn.innerHTML = '<i class="fa-solid fa-rotate-right"></i> Làm mới';
+            }
+        }
+
+        let allHistoryData = [];
+        let currentFilter = 'all';
+
+        function renderHistory(data) {
+            const container = document.getElementById('timeline-container');
+            
+            if (data.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fa-regular fa-folder-open"></i>
+                        <p>Không tìm thấy lịch sử phù hợp.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = data.map(item => {
+                const actionUpper = item.action.toUpperCase();
+                const isOn = actionUpper === 'ON' || actionUpper === 'OPEN';
+                const badgeClass = isOn ? 'badge-on' : 'badge-off';
+                const actionLabel = actionUpper === 'ON' ? 'BẬT' : (actionUpper === 'OFF' ? 'TẮT' : actionUpper);
+                const tagClass = isOn ? 'tag-on' : 'tag-off';
+                
+                return `
+                    <div class="timeline-item">
+                        <div class="timeline-badge ${badgeClass}"></div>
+                        <div class="timeline-panel">
+                            <div class="timeline-heading">
+                                <h4 class="timeline-title">${item.device_name}</h4>
+                                <span class="timeline-time"><i class="fa-regular fa-clock"></i> ${formatTime(item.created_at)}</span>
+                            </div>
+                            <div class="timeline-body">
+                                <span class="action-tag ${tagClass}">${actionLabel}</span>
+                                Nguồn thao tác: <strong>${item.triggered_by}</strong>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function applyFilters() {
+            const searchText = document.getElementById('search-input').value.toLowerCase();
+            
+            const filtered = allHistoryData.filter(item => {
+                const matchSearch = item.device_name.toLowerCase().includes(searchText) || 
+                                   item.triggered_by.toLowerCase().includes(searchText);
+                
+                let matchStatus = true;
+                if (currentFilter === 'on') matchStatus = item.action.toUpperCase() === 'ON' || item.action.toUpperCase() === 'OPEN';
+                if (currentFilter === 'off') matchStatus = item.action.toUpperCase() === 'OFF' || item.action.toUpperCase() === 'CLOSE';
+                if (currentFilter === 'face') matchStatus = item.triggered_by.toLowerCase().includes('face');
+
+                return matchSearch && matchStatus;
+            });
+
+            renderHistory(filtered);
+        }
+
+        // Event Listeners for Filters
+        document.getElementById('search-input').addEventListener('input', applyFilters);
+        
+        document.getElementById('filter-chips').addEventListener('click', (e) => {
+            if (e.target.classList.contains('filter-chip')) {
+                // Update UI active state
+                document.querySelectorAll('.filter-chip').forEach(btn => btn.classList.remove('active'));
+                e.target.classList.add('active');
+                
+                // Set filter value and apply
+                currentFilter = e.target.getAttribute('data-filter');
+                applyFilters();
+            }
+        });
+
+        // Tải lịch sử khi vừa load trang
+        document.addEventListener('DOMContentLoaded', fetchHistory);
+
+        // Lắng nghe sự kiện từ trang Home để load lại
+        window.addEventListener("storage", (e) => {
+            if (e.key === "history_updated") {
+                fetchHistory();
+            }
+        });
+    </script>
+</body>
+</html>

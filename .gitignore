@@ -1,0 +1,56 @@
+# ==========================================
+# 1. BẢO MẬT & THÔNG TIN NHẠY CẢM (QUAN TRỌNG NHẤT)
+# ==========================================
+.env
+*.pem
+*.key
+credentials.json
+secret_keys.txt
+
+# ==========================================
+# 2. PYTHON & FASTAPI (Backend)
+# ==========================================
+# Môi trường ảo (Virtual Environment)
+venv/
+env/
+.venv/
+Venv/
+# File rác do Python tự sinh ra
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# ==========================================
+# 3. MÔ HÌNH AI & DỮ LIỆU LỚN (AI Vision)
+# ==========================================
+# Không push model AI lên Git vì file quá nặng (vài trăm MB)
+*.onnx
+*.pt
+*.pth
+*.h5
+models/
+insightface_models/
+
+# Hình ảnh test/log khuôn mặt
+logs/
+test_images/
+uploaded_faces/
+
+# ==========================================
+# 4. ESP32 & ARDUINO/PLATFORMIO (Firmware)
+# ==========================================
+# File biên dịch của C++ (Rất nặng và sinh ra liên tục)
+.pio/
+build/
+*.bin
+*.elf
+*.hex
+
+# ==========================================
+# 5. HỆ ĐIỀU HÀNH & EDITOR
+# ==========================================
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

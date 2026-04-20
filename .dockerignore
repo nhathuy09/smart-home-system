@@ -1,0 +1,7 @@
+.env
+__pycache__/
+*.ppn
+Venv/
+node_modules/
+.venv/
+.env.local      
