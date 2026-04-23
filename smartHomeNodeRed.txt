@@ -1,0 +1,1063 @@
+[
+    {
+        "id": "df2858be15eefc55",
+        "type": "tab",
+        "label": "smart_home_agent",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "111e6b8e810b8106",
+        "type": "group",
+        "z": "df2858be15eefc55",
+        "name": "Giả lập dữ liệu",
+        "style": {
+            "stroke": "#ff0000",
+            "label": true
+        },
+        "nodes": [
+            "f2271a85a9e21802",
+            "d5bfb250b856d390",
+            "136a287201477d3e",
+            "1237b99e50aabc1b",
+            "bc3e4c4eb31baea4",
+            "92beca20075d6a31"
+        ],
+        "x": 74,
+        "y": 899,
+        "w": 812,
+        "h": 222
+    },
+    {
+        "id": "8ad2038b1b432a93",
+        "type": "group",
+        "z": "df2858be15eefc55",
+        "name": "Sensor",
+        "style": {
+            "stroke": "#92d04f",
+            "label": true,
+            "color": "#000000"
+        },
+        "nodes": [
+            "4e02112cf785fa64",
+            "b85d42c7c78ea2bc",
+            "14334ea736d6ae6c",
+            "6d2a901c2ffca9a0",
+            "fce87176751bb05c",
+            "220faccbc51e7f8d",
+            "7dedcbddb1203eeb",
+            "3d23dc24c331423b",
+            "379dabcb0db07e21",
+            "bf55b2bd83ef9481",
+            "aea2fcdfbe6d341a",
+            "d59d9ab4932703c0"
+        ],
+        "x": 74,
+        "y": 19,
+        "w": 852,
+        "h": 262
+    },
+    {
+        "id": "65399f681c89cec6",
+        "type": "group",
+        "z": "df2858be15eefc55",
+        "name": "Control",
+        "style": {
+            "stroke": "#0070c0",
+            "label": true,
+            "color": "#001f60"
+        },
+        "nodes": [
+            "9c28c12ad9cc4984",
+            "53b20b49b9a6b353",
+            "eb13b1989d3dccb7",
+            "941dcff6816eedd8",
+            "6406538852c8cc08",
+            "8791f9215b7a2059",
+            "a41e6e880ace1ecf",
+            "27e3404c08604345",
+            "1858e52333e1e969",
+            "b82d3583b02beabd",
+            "7fe4e264f99e48ab",
+            "f296674a9be39cb2",
+            "7fbf40fc8aebae29",
+            "15cd7040ceab88b1"
+        ],
+        "x": 74,
+        "y": 279,
+        "w": 812,
+        "h": 282
+    },
+    {
+        "id": "2b8181ea80da634d",
+        "type": "group",
+        "z": "df2858be15eefc55",
+        "name": "Web ui",
+        "style": {
+            "label": true,
+            "stroke": "#6f2fa0"
+        },
+        "nodes": [
+            "6fc6533a56291191",
+            "7fc2e082ce1cd524",
+            "0796de8d6bb1f8a8",
+            "94889ec1bf67ca8f",
+            "70c8e76e8a54513d",
+            "3e1f4858f49c65f8",
+            "cb3a166ea2e4b367",
+            "87465153ab53c8c6",
+            "77b7d41b1778802f",
+            "2132657f8ef5494b"
+        ],
+        "x": 54,
+        "y": 599,
+        "w": 852,
+        "h": 242
+    },
+    {
+        "id": "f2271a85a9e21802",
+        "type": "inject",
+        "z": "df2858be15eefc55",
+        "g": "111e6b8e810b8106",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 180,
+        "y": 1020,
+        "wires": [
+            [
+                "d5bfb250b856d390"
+            ]
+        ]
+    },
+    {
+        "id": "4e02112cf785fa64",
+        "type": "function",
+        "z": "df2858be15eefc55",
+        "g": "8ad2038b1b432a93",
+        "name": "Hàm lưu database",
+        "func": "let data = msg.payload;\n// Đảm bảo có room, nếu không có thì bỏ qua\nlet room = (data.room || \"\").toLowerCase();\n\nconst metricMap = {\n    \"bedroom_temperature\": 1, \"bedroom_humidity\": 2, \"bedroom_light\": 3, \"bedroom_door_status\": 4, \"bedroom_motion\": 5,\n    \"kitchen_temperature\": 6, \"kitchen_humidity\": 7, \"kitchen_gas\": 8, \"kitchen_motion\": 9,\n    \"bathroom_door_status\": 10, \"bathroom_motion\": 11,\n    \"livingroom_temperature\": 12, \"livingroom_humidity\": 13, \"livingroom_light\": 14,\n    \"livingroom_tvoc\": 15, \"livingroom_eco2\": 16, \"livingroom_door_status\": 17, \"livingroom_motion\": 18\n};\n\nlet values = [];\nfor (let key in data) {\n    if ([\"device_id\", \"room\", \"timestamp\"].includes(key)) continue;\n\n    let mapKey = `${room}_${key}`;\n    if (metricMap[mapKey] !== undefined) {\n        let metric_id = metricMap[mapKey];\n        let val = data[key];\n\n        // Chuyển đổi Boolean sang 0/1 nếu DB là kiểu số\n        if (typeof val === \"boolean\") val = val ? 1 : 0;\n\n        // Gom các bản ghi vào một câu INSERT duy nhất để tăng hiệu suất\n        values.push(`(${metric_id}, '${val}', NOW())`);\n    }\n}\n\nif (values.length > 0) {\n    msg.query = `INSERT INTO sensor_logs (metric_id, value, created_at) VALUES ${values.join(', ')};`;\n    return msg;\n} else {\n    return null;\n}",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 430,
+        "y": 100,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "b85d42c7c78ea2bc",
+        "type": "debug",
+        "z": "df2858be15eefc55",
+        "g": "8ad2038b1b432a93",
+        "name": "sensor data",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 430,
+        "y": 60,
+        "wires": []
+    },
+    {
+        "id": "14334ea736d6ae6c",
+        "type": "mqtt in",
+        "z": "df2858be15eefc55",
+        "g": "8ad2038b1b432a93",
+        "name": "Sensor data",
+        "topic": "home/sensor/+",
+        "qos": "2",
+        "datatype": "auto-detect",
+        "broker": "cc6baff87bdbca5b",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 170,
+        "y": 140,
+        "wires": [
+            [
+                "4e02112cf785fa64",
+                "220faccbc51e7f8d",
+                "d59d9ab4932703c0",
+                "379dabcb0db07e21"
+            ]
+        ]
+    },
+    {
+        "id": "6fc6533a56291191",
+        "type": "mqtt in",
+        "z": "df2858be15eefc55",
+        "g": "2b8181ea80da634d",
+        "name": "MQTT state device",
+        "topic": "home/status/device",
+        "qos": "2",
+        "datatype": "auto-detect",
+        "broker": "cc6baff87bdbca5b",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 170,
+        "y": 660,
+        "wires": [
+            [
+                "7fc2e082ce1cd524",
+                "2132657f8ef5494b"
+            ]
+        ]
+    },
+    {
+        "id": "9c28c12ad9cc4984",
+        "type": "mqtt out",
+        "z": "df2858be15eefc55",
+        "g": "65399f681c89cec6",
+        "name": "MQTT recieve control ",
+        "topic": "home/command",
+        "qos": "",
+        "retain": "",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "cc6baff87bdbca5b",
+        "x": 760,
+        "y": 460,
+        "wires": []
+    },
+    {
+        "id": "53b20b49b9a6b353",
+        "type": "mqtt in",
+        "z": "df2858be15eefc55",
+        "g": "65399f681c89cec6",
+        "name": "Điều khiển cửa",
+        "topic": "smarthome/door/control",
+        "qos": "2",
+        "datatype": "auto-detect",
+        "broker": "cc6baff87bdbca5b",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 180,
+        "y": 460,
+        "wires": [
+            [
+                "941dcff6816eedd8",
+                "7fe4e264f99e48ab",
+                "f296674a9be39cb2",
+                "1858e52333e1e969"
+            ]
+        ]
+    },
+    {
+        "id": "eb13b1989d3dccb7",
+        "type": "debug",
+        "z": "df2858be15eefc55",
+        "g": "65399f681c89cec6",
+        "name": "check door",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 410,
+        "y": 360,
+        "wires": []
+    },
+    {
+        "id": "941dcff6816eedd8",
+        "type": "function",
+        "z": "df2858be15eefc55",
+        "g": "65399f681c89cec6",
+        "name": "payload điều khiển cừa",
+        "func": "let data = (typeof msg.payload === \"string\") ? JSON.parse(msg.payload) : msg.payload;\n\nif (data.type === \"control\") {\n    let rawName = data.device_name.toLowerCase();\n    let mappedType = \"unknown\";\n    \n    // 1. Phân loại loại thiết bị (Type) cho ESP32\n    if (rawName.includes(\"cửa\") || rawName.includes(\"khóa\")) {\n        mappedType = \"door\";\n    } else if (rawName.includes(\"đèn\")) {\n        mappedType = \"light\";\n    } else if (rawName.includes(\"quạt\")) {\n        mappedType = \"fan\";\n    } else if (rawName.includes(\"tv\") || rawName.includes(\"tivi\")) {\n        mappedType = \"tv\";\n    } else {\n        mappedType = rawName.trim().replace(/\\s+/g, \"_\");\n    }\n    \n    msg.topic = \"home/command\"; // Hoặc \"smartHome/control/device\" tùy anh đang quy định\n    \n    // 2. CHUẨN HÓA PAYLOAD DUY NHẤT (Dùng chung cho mọi thiết bị)\n    msg.payload = {\n        \"id\": data.device,               // 🌟 GIỮ LẠI ID để Web UI và Database nhận diện\n        \"device\": mappedType,            // ESP32 cần để biết là light, fan hay door\n        \"location\": data.location,       // ESP32 cần để biết phòng nào\n        \"status\": data.command,          // Dùng chung \"ON\" / \"OFF\" cho cả đèn và cửa\n        \"device_name\": data.device_name, // Chuyển tiếp tên để DB ghi log lịch sử\n        \"triggered_by\": \"Web UI\"         // Phân biệt nguồn điều khiển\n    };\n        \n    return msg;\n}\n\nreturn null;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 450,
+        "y": 440,
+        "wires": [
+            [
+                "9c28c12ad9cc4984"
+            ]
+        ]
+    },
+    {
+        "id": "7fc2e082ce1cd524",
+        "type": "function",
+        "z": "df2858be15eefc55",
+        "g": "2b8181ea80da634d",
+        "name": "Trạng thái thiết bị",
+        "func": "\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 410,
+        "y": 680,
+        "wires": [
+            [
+                "0796de8d6bb1f8a8",
+                "94889ec1bf67ca8f"
+            ]
+        ]
+    },
+    {
+        "id": "0796de8d6bb1f8a8",
+        "type": "debug",
+        "z": "df2858be15eefc55",
+        "g": "2b8181ea80da634d",
+        "name": "state device",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 650,
+        "y": 660,
+        "wires": []
+    },
+    {
+        "id": "6406538852c8cc08",
+        "type": "mqtt in",
+        "z": "df2858be15eefc55",
+        "g": "65399f681c89cec6",
+        "name": "Control device",
+        "topic": "smartHome/control/device",
+        "qos": "2",
+        "datatype": "auto-detect",
+        "broker": "cc6baff87bdbca5b",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 170,
+        "y": 360,
+        "wires": [
+            [
+                "941dcff6816eedd8",
+                "eb13b1989d3dccb7",
+                "8791f9215b7a2059",
+                "1858e52333e1e969"
+            ]
+        ]
+    },
+    {
+        "id": "94889ec1bf67ca8f",
+        "type": "mqtt out",
+        "z": "df2858be15eefc55",
+        "g": "2b8181ea80da634d",
+        "name": "MQTT recieve state",
+        "topic": "smartHome/state/device",
+        "qos": "",
+        "retain": "",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "cc6baff87bdbca5b",
+        "x": 650,
+        "y": 720,
+        "wires": []
+    },
+    {
+        "id": "d5bfb250b856d390",
+        "type": "function",
+        "z": "df2858be15eefc55",
+        "g": "111e6b8e810b8106",
+        "name": "Dữ liệu giả lập",
+        "func": "let queries = [];\nlet now = new Date();\nlet hour = now.getHours();\n// Hàm tạo số ngẫu nhiên\nfunction rand(min, max) { return (Math.random() * (max - min) + min).toFixed(2); }\nfunction state(chance) { return Math.random() < chance ? 1 : 0; }\n\n// ==========================================\n// 1. TẠO VÀ LƯU SỐ LIỆU VÀO BIẾN\n// ==========================================\nlet t_bed = rand(24, 28), h_bed = rand(50, 65), l_bed = rand(10, 500), m_bed = state(0.1);\nlet t_kit = rand(28, 33), h_kit = rand(40, 55), g_kit = rand(20, 60),  m_kit = state(0.3);\nlet t_liv = rand(26, 30), h_liv = rand(45, 55), l_liv = rand(100, 800),  tvoc_liv = rand(10, 50), eco2_liv = rand(400, 600), m_liv = state(0.4);\nlet m_bath = state(0.2);\n\n// ==========================================\n// 2. LỆNH SQL CHO DATABASE (GIỮ NGUYÊN)\n// ==========================================\nqueries.push(`INSERT INTO sensor_logs (metric_id, value, created_at) VALUES (1, ${t_bed}, timezone('Asia/Ho_Chi_Minh', now()))`); \nqueries.push(`INSERT INTO sensor_logs (metric_id, value, created_at) VALUES (2, ${h_bed}, timezone('Asia/Ho_Chi_Minh', now()))`); \nqueries.push(`INSERT INTO sensor_logs (metric_id, value, created_at) VALUES (3, ${l_bed}, timezone('Asia/Ho_Chi_Minh', now()))`); \nqueries.push(`INSERT INTO sensor_logs (metric_id, value, created_at) VALUES (4, ${m_bed}, timezone('Asia/Ho_Chi_Minh', now()))`);    \nqueries.push(`INSERT INTO sensor_logs (metric_id, value, created_at) VALUES (5, ${m_bed}, timezone('Asia/Ho_Chi_Minh', now()))`);    \n\nqueries.push(`INSERT INTO sensor_logs (metric_id, value, created_at) VALUES (6, ${t_kit}, timezone('Asia/Ho_Chi_Minh', now()))`); \nqueries.push(`INSERT INTO sensor_logs (metric_id, value, created_at) VALUES (7, ${h_kit}, timezone('Asia/Ho_Chi_Minh', now()))`); \nqueries.push(`INSERT INTO sensor_logs (metric_id, value, created_at) VALUES (8, ${g_kit}, timezone('Asia/Ho_Chi_Minh', now()))`); \nqueries.push(`INSERT INTO sensor_logs (metric_id, value, created_at) VALUES (9, ${m_kit}, timezone('Asia/Ho_Chi_Minh', now()))`);    \n\nqueries.push(`INSERT INTO sensor_logs (metric_id, value, created_at) VALUES (10, ${m_bath}, timezone('Asia/Ho_Chi_Minh', now()))`);   \nqueries.push(`INSERT INTO sensor_logs (metric_id, value, created_at) VALUES (11, ${m_bath}, timezone('Asia/Ho_Chi_Minh', now()))`);   \n\nqueries.push(`INSERT INTO sensor_logs (metric_id, value, created_at) VALUES (12, ${t_liv}, timezone('Asia/Ho_Chi_Minh', now()))`); \nqueries.push(`INSERT INTO sensor_logs (metric_id, value, created_at) VALUES (13, ${h_liv}, timezone('Asia/Ho_Chi_Minh', now()))`); \nqueries.push(`INSERT INTO sensor_logs (metric_id, value, created_at) VALUES (14, ${l_liv}, timezone('Asia/Ho_Chi_Minh', now()))`);\nqueries.push(`INSERT INTO sensor_logs (metric_id, value, created_at) VALUES (15, ${tvoc_liv}, timezone('Asia/Ho_Chi_Minh', now()))`);  \nqueries.push(`INSERT INTO sensor_logs (metric_id, value, created_at) VALUES (15, ${eco2_liv}, timezone('Asia/Ho_Chi_Minh', now()))`);  \nqueries.push(`INSERT INTO sensor_logs (metric_id, value, created_at) VALUES (16, ${rand(400, 600)}, timezone('Asia/Ho_Chi_Minh', now()))`); \nqueries.push(`INSERT INTO sensor_logs (metric_id, value, created_at) VALUES (17, ${state(0.05)}, timezone('Asia/Ho_Chi_Minh', now()))`);  \nqueries.push(`INSERT INTO sensor_logs (metric_id, value, created_at) VALUES (18, ${m_liv}, timezone('Asia/Ho_Chi_Minh', now()))`);   \n\nmsg.query = queries.join('; ');\n\n// ==========================================\n// 3. TẠO TIN NHẮN WEBSOCKET (ĐÃ BỔ SUNG ĐẦY ĐỦ)\n// ==========================================\nlet msgWS = [\n    // Phòng ngủ\n    { payload: JSON.stringify({ topic: \"sensor/temp/bedroom\", payload: t_bed }) },\n    { payload: JSON.stringify({ topic: \"sensor/humi/bedroom\", payload: h_bed }) },\n    { payload: JSON.stringify({ topic: \"sensor/lux/bedroom\",  payload: l_bed }) },\n    { payload: JSON.stringify({ topic: \"sensor/motion/room1\", payload: m_bed }) },\n    \n   // Phòng khách\n    { payload: JSON.stringify({ topic: \"sensor/temp/living\", payload: t_liv }) },\n    { payload: JSON.stringify({ topic: \"sensor/humi/living\", payload: h_liv }) },\n    { payload: JSON.stringify({ topic: \"sensor/lux/living\",  payload: l_liv }) },\n    { payload: JSON.stringify({ topic: \"sensor/eco2/living\", payload: eco2_liv }) }, // Cập nhật CO2\n    { payload: JSON.stringify({ topic: \"sensor/tvoc/living\", payload: tvoc_liv }) }, // Cập nhật TVOC\n    { payload: JSON.stringify({ topic: \"sensor/motion/living\", payload: m_liv }) },\n    \n    // Nhà bếp (ĐÃ BỔ SUNG NHIỆT VÀ ẨM)\n    { payload: JSON.stringify({ topic: \"sensor/gas/kitchen\", payload: g_kit }) },\n    { payload: JSON.stringify({ topic: \"sensor/temp/kitchen\", payload: t_kit }) }, \n    { payload: JSON.stringify({ topic: \"sensor/humi/kitchen\", payload: h_kit }) }, \n    { payload: JSON.stringify({ topic: \"sensor/motion/kitchen\", payload: m_kit }) },\n    \n    // Phòng tắm\n    { payload: JSON.stringify({ topic: \"sensor/motion/room2\", payload: m_bath }) }\n];\nnode.send([msg, msgWS]);\nreturn ;",
+        "outputs": 2,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 360,
+        "y": 980,
+        "wires": [
+            [
+                "1237b99e50aabc1b"
+            ],
+            [
+                "bc3e4c4eb31baea4"
+            ]
+        ]
+    },
+    {
+        "id": "136a287201477d3e",
+        "type": "debug",
+        "z": "df2858be15eefc55",
+        "g": "111e6b8e810b8106",
+        "name": "Check dữ liệu giả lập",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 740,
+        "y": 940,
+        "wires": []
+    },
+    {
+        "id": "70c8e76e8a54513d",
+        "type": "websocket in",
+        "z": "df2858be15eefc55",
+        "g": "2b8181ea80da634d",
+        "name": "Control device from web",
+        "server": "119555e3aa202d29",
+        "client": "",
+        "x": 210,
+        "y": 760,
+        "wires": [
+            [
+                "cb3a166ea2e4b367",
+                "87465153ab53c8c6"
+            ]
+        ]
+    },
+    {
+        "id": "6d2a901c2ffca9a0",
+        "type": "websocket out",
+        "z": "df2858be15eefc55",
+        "g": "8ad2038b1b432a93",
+        "name": "WS nhận data sensor",
+        "server": "c131fd516acf0d7e",
+        "client": "",
+        "x": 700,
+        "y": 140,
+        "wires": []
+    },
+    {
+        "id": "3e1f4858f49c65f8",
+        "type": "debug",
+        "z": "df2858be15eefc55",
+        "g": "2b8181ea80da634d",
+        "name": "debug 2",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 740,
+        "y": 760,
+        "wires": []
+    },
+    {
+        "id": "cb3a166ea2e4b367",
+        "type": "function",
+        "z": "df2858be15eefc55",
+        "g": "2b8181ea80da634d",
+        "name": "Hàm chuyển đổi từ ws sang mqtt",
+        "func": "let data = (typeof msg.payload === \"string\") ? JSON.parse(msg.payload) : msg.payload;\n\nif (data.type === \"control\") {\n    let rawName = data.device_name.toLowerCase();\n    let mappedDevice = \"unknown\";\n    if (rawName.includes(\"đèn\")) {\n        mappedDevice = \"light\";\n    } else if (rawName.includes(\"quạt\")) {\n        mappedDevice = \"fan\";\n    } else if (rawName.includes(\"tv\") || rawName.includes(\"tivi\")) {\n        mappedDevice = \"tv\";\n    } else {\n        mappedDevice = rawName.trim().replace(/\\s+/g, \"_\");\n    }\n    \n    msg.topic = \"home/command\";\n    \n    // 2. Logic điều khiển Cửa/Khóa\n    if (rawName.includes(\"cửa\") || rawName.includes(\"khóa\")) {\n        msg.payload = {\n            \"device\": \"door\",\n            \"action\": (data.command === \"ON\") ? \"open\" : \"close\",\n            \"location\": data.location,\n            \"triggered_by\": \"Web UI\"\n        };\n    } \n    // 3. Logic điều khiển các thiết bị bình thường (Đèn, Quạt...)\n    else {\n        msg.payload = {\n            \"device\": mappedDevice,    // ESP32 sẽ nhận \"light\", \"fan\", \"tv\"\n            \"location\": data.location, // ESP32 sẽ nhận \"Livingroom\", \"Kitchen\"\n            \"status\": data.command     // ESP32 sẽ nhận \"ON\" hoặc \"OFF\"\n        };\n    }\n        \n    return msg;\n}\n\nreturn null;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 480,
+        "y": 800,
+        "wires": [
+            [
+                "3e1f4858f49c65f8",
+                "77b7d41b1778802f"
+            ]
+        ]
+    },
+    {
+        "id": "87465153ab53c8c6",
+        "type": "debug",
+        "z": "df2858be15eefc55",
+        "g": "2b8181ea80da634d",
+        "name": "debug 3",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 400,
+        "y": 740,
+        "wires": []
+    },
+    {
+        "id": "8791f9215b7a2059",
+        "type": "function",
+        "z": "df2858be15eefc55",
+        "g": "65399f681c89cec6",
+        "name": "function 1",
+        "func": "// 1. Lấy dữ liệu an toàn\nlet aiData = msg.payload;\nif (typeof aiData === \"string\") {\n    try { aiData = JSON.parse(aiData); }\n    catch (e) { return null; }\n}\n\nconst command = (aiData.status || aiData.state || \"OFF\").toUpperCase();\nlet targetDevice = null;\n\n// 2. TỪ ĐIỂN MAP CHÍNH XÁC THEO DATABASE\nconst deviceDictionary = {\n    \"light_bedroom\": { id: 1, name: \"Đèn Phòng Ngủ\" },\n    \"fan_bedroom\": { id: 2, name: \"Quạt Phòng Ngủ\" },\n    \"door_bedroom\": { id: 9, name: \"Khóa cửa sổ\" },\n    \"window_bedroom\": { id: 9, name: \"Khóa cửa sổ\" },\n    \"fan_kitchen\": { id: 3, name: \"Quạt Bếp\" },\n    \"light_kitchen\": { id: 4, name: \"Đèn Bếp\" },\n    \"light_bathroom\": { id: 5, name: \"Đèn Nhà Tắm\" },\n    \"door_livingroom\": { id: 6, name: \"Khóa cửa chính\" },\n    \"lock_livingroom\": { id: 6, name: \"Khóa cửa chính\" },\n    \"light_livingroom\": { id: 7, name: \"Đèn Phòng Khách\" },\n    \"fan_livingroom\": { id: 8, name: \"Quạt Phòng Khách\" }\n};\n\n// 3. XỬ LÝ LOGIC 2 TRƯỜNG HỢP\n\n// TRƯỜNG HỢP A: Lệnh khẩn cấp đã gửi kèm ID sẵn (Ví dụ: id = 3)\nif (aiData.id !== undefined && aiData.id !== null) {\n    let foundName = aiData.name || aiData.device || \"Thiết bị hệ thống\";\n    // Tự động quét từ điển để lấy đúng tên tiếng Việt ghi log\n    for (let key in deviceDictionary) {\n        if (deviceDictionary[key].id == aiData.id) {\n            foundName = deviceDictionary[key].name;\n            break;\n        }\n    }\n    targetDevice = { id: aiData.id, name: foundName };\n}\n// TRƯỜNG HỢP B: Lệnh từ AI chưa có ID, phải tra từ điển\nelse {\n    // Ép kiểu an toàn, tránh lỗi toLowerCase()\n    let deviceStr = (aiData.device || \"\").toLowerCase();\n    let locationStr = (aiData.location || \"\").toLowerCase();\n\n    if (!deviceStr || !locationStr) {\n        node.warn(\"❌ Dữ liệu thiếu device hoặc location: \" + JSON.stringify(aiData));\n        return null;\n    }\n\n    const lookupKey = `${deviceStr}_${locationStr}`;\n    targetDevice = deviceDictionary[lookupKey];\n}\n\n// 4. Kiểm tra hợp lệ\nif (!targetDevice) {\n    node.warn(\"❌ Không xác định được thiết bị: \" + JSON.stringify(aiData));\n    return null;\n}\n\n// 5. Chuẩn bị dữ liệu cập nhật DB và giao diện\nconst deviceId = targetDevice.id;\nconst deviceName = targetDevice.name;\nconst extraData = JSON.stringify({ type: (aiData.device || \"unknown\"), name: deviceName });\n\nmsg.ws_data = { id: deviceId, status: command };\n\n// 6. CÂU LỆNH SQL CẬP NHẬT DATABASE\nmsg.query = `\n    WITH update_dev AS (\n        UPDATE devices \n        SET status = $1, \n            updated_at = NOW(),\n            last_command_at = NOW()\n        WHERE id = $2\n    )\n    INSERT INTO device_logs (device_id, action, payload, triggered_by) \n    VALUES ($2, $1, $3, 'Hệ thống/AI');\n`;\n\nmsg.params = [command, deviceId, extraData];\n\n// 7. Bọc lại payload chuẩn để đẩy xuống cho ESP32 qua khối MQTT Out\nmsg.payload = JSON.stringify({\n    id: deviceId,\n    status: command\n});\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 400,
+        "y": 320,
+        "wires": [
+            [
+                "b82d3583b02beabd"
+            ]
+        ]
+    },
+    {
+        "id": "a41e6e880ace1ecf",
+        "type": "http request",
+        "z": "df2858be15eefc55",
+        "g": "65399f681c89cec6",
+        "name": "",
+        "method": "POST",
+        "ret": "obj",
+        "paytoqs": "ignore",
+        "url": "http://smarthome_app:8000/api/notify_ws",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": false,
+        "headers": [],
+        "x": 570,
+        "y": 400,
+        "wires": [
+            [
+                "27e3404c08604345"
+            ]
+        ]
+    },
+    {
+        "id": "27e3404c08604345",
+        "type": "debug",
+        "z": "df2858be15eefc55",
+        "g": "65399f681c89cec6",
+        "name": "debug 4",
+        "active": true,
+        "tosidebar": false,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 740,
+        "y": 360,
+        "wires": []
+    },
+    {
+        "id": "fce87176751bb05c",
+        "type": "postgresql",
+        "z": "df2858be15eefc55",
+        "g": "8ad2038b1b432a93",
+        "name": "",
+        "query": "",
+        "postgreSQLConfig": "ebec8c928981f01a",
+        "split": false,
+        "rowsPerMsg": 1,
+        "outputs": 1,
+        "x": 670,
+        "y": 80,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "1237b99e50aabc1b",
+        "type": "postgresql",
+        "z": "df2858be15eefc55",
+        "g": "111e6b8e810b8106",
+        "name": "",
+        "query": "",
+        "postgreSQLConfig": "ebec8c928981f01a",
+        "split": false,
+        "rowsPerMsg": 1,
+        "outputs": 1,
+        "x": 550,
+        "y": 940,
+        "wires": [
+            [
+                "136a287201477d3e"
+            ]
+        ]
+    },
+    {
+        "id": "a53f28733b4b03cf",
+        "type": "aedes broker",
+        "z": "df2858be15eefc55",
+        "name": "",
+        "mqtt_port": "1881",
+        "mqtt_ws_bind": "port",
+        "mqtt_ws_port": "",
+        "mqtt_ws_path": "",
+        "cert": "",
+        "key": "",
+        "certname": "",
+        "keyname": "",
+        "persistence_bind": "memory",
+        "dburl": "",
+        "usetls": false,
+        "x": 1110,
+        "y": 60,
+        "wires": [
+            [],
+            []
+        ]
+    },
+    {
+        "id": "1858e52333e1e969",
+        "type": "function",
+        "z": "df2858be15eefc55",
+        "g": "65399f681c89cec6",
+        "name": "function 2",
+        "func": "let rawData = msg.payload;\nmsg.payload = {\n    \"id\": parseInt(rawData.id), \n    \"status\": String(rawData.status) \n};\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 400,
+        "y": 400,
+        "wires": [
+            [
+                "a41e6e880ace1ecf"
+            ]
+        ]
+    },
+    {
+        "id": "220faccbc51e7f8d",
+        "type": "function",
+        "z": "df2858be15eefc55",
+        "g": "8ad2038b1b432a93",
+        "name": "Dữ liệu thật",
+        "func": "let data = msg.payload;\nif (typeof data === \"string\") {\n    try { data = JSON.parse(data); } catch (e) { return null; }\n}\n\nlet room = (data.room || \"\").toLowerCase();\nif (!room) return null;\n\nconst metricMap = {\n    \"bedroom_temperature\": 1, \"bedroom_humidity\": 2, \"bedroom_light\": 3, \"bedroom_door_status\": 4, \"bedroom_motion\": 5,\n    \"kitchen_temperature\": 6, \"kitchen_humidity\": 7, \"kitchen_gas\": 8, \"kitchen_motion\": 9,\n    \"bathroom_door_status\": 10, \"bathroom_motion\": 11,\n    \"livingroom_temperature\": 12, \"livingroom_humidity\": 13, \"livingroom_light\": 14,\n    \"livingroom_tvoc\": 15, \"livingroom_eco2\": 16, \"livingroom_door_status\": 17, \"livingroom_motion\": 18\n};\n\nconst roomRename = {\n    \"bedroom\": \"bedroom\", \"livingroom\": \"living\", \"kitchen\": \"kitchen\", \"bathroom\": \"bathroom\"\n};\n\nconst metricRename = {\n    \"temperature\": \"temp\", \"humidity\": \"humi\", \"light\": \"lux\",\n    \"gas\": \"gas\", \"motion\": \"motion\", \"eco2\": \"eco2\", \"tvoc\": \"tvoc\",\n    \"door_status\": \"door\" \n};\n\n// Ngưỡng lọc nhiễu Môi trường (Deadband) - CHỈ ÁP DỤNG CHO DATABASE\nconst DEADBAND = {\n    \"temperature\": 0.4, \n    \"humidity\": 2.0,    \n    \"light\": 10,        \n    \"gas\": 50,          \n    \"tvoc\": 15,\n    \"eco2\": 25\n};\n\nlet lastValues = context.get(\"lastValues\") || {};\nlet hasChanges = false; \nlet sqlValues = [];\nlet msgWS = [];\n\nfor (let key in data) {\n    if ([\"device_id\", \"room\", \"timestamp\"].includes(key)) continue;\n\n    let mapKey = `${room}_${key}`;\n    if (metricMap[mapKey] !== undefined) {\n        let metric_id = metricMap[mapKey];\n        let val = data[key];\n        let isChanged = false;\n\n        if (key === \"motion\" || key === \"door_status\") {\n            // An ninh: Nhạy tuyệt đối\n            if (lastValues[mapKey] !== val) {\n                isChanged = true;\n            }\n        } else {\n            // Môi trường: Lọc qua ngưỡng Deadband\n            let oldVal = lastValues[mapKey];\n            let threshold = DEADBAND[key] || 0.1; \n            \n            if (oldVal === undefined || Math.abs(oldVal - val) >= threshold) {\n                isChanged = true;\n            }\n        }\n        if (isChanged) {\n            lastValues[mapKey] = val;\n            hasChanges = true;\n            let dbVal = (typeof val === \"boolean\") ? (val ? 1 : 0) : val;\n            sqlValues.push(`(${metric_id}, ${dbVal}, NOW() AT TIME ZONE 'Asia/Ho_Chi_Minh')`);\n        }\n\n        \n        let metricPart = metricRename[key] || key;\n        let roomPart = roomRename[room] || room;\n        \n        if (key === \"motion\") {\n            if (room === \"bedroom\") roomPart = \"room1\";\n            if (room === \"bathroom\") roomPart = \"room2\";\n        }\n\n        msgWS.push({\n            payload: JSON.stringify({\n                topic: `sensor/${metricPart}/${roomPart}`,\n                payload: val\n            })\n        });\n    }\n}\n\n// Lưu bộ nhớ đệm (Chỉ phục vụ cho DB)\nif (hasChanges) {\n    context.set(\"lastValues\", lastValues);\n}\n\n// Xuất ra cổng 1 (Database)\nlet msgDB = null;\nif (sqlValues.length > 0) {\n    msg.query = `INSERT INTO sensor_logs (metric_id, value, created_at) VALUES ${sqlValues.join(', ')};`;\n    msgDB = msg;\n}\n\n// Xuất mảng [Cổng 1, Cổng 2]\nreturn [msgDB, msgWS];",
+        "outputs": 2,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 410,
+        "y": 140,
+        "wires": [
+            [
+                "fce87176751bb05c"
+            ],
+            [
+                "6d2a901c2ffca9a0"
+            ]
+        ]
+    },
+    {
+        "id": "7dedcbddb1203eeb",
+        "type": "debug",
+        "z": "df2858be15eefc55",
+        "g": "8ad2038b1b432a93",
+        "name": "debug 5",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 820,
+        "y": 100,
+        "wires": []
+    },
+    {
+        "id": "7fe4e264f99e48ab",
+        "type": "debug",
+        "z": "df2858be15eefc55",
+        "g": "65399f681c89cec6",
+        "name": "check door",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 430,
+        "y": 480,
+        "wires": []
+    },
+    {
+        "id": "bc3e4c4eb31baea4",
+        "type": "websocket out",
+        "z": "df2858be15eefc55",
+        "g": "111e6b8e810b8106",
+        "name": "WS nhận data sensor",
+        "server": "c131fd516acf0d7e",
+        "client": "",
+        "x": 580,
+        "y": 1000,
+        "wires": []
+    },
+    {
+        "id": "b82d3583b02beabd",
+        "type": "postgresql",
+        "z": "df2858be15eefc55",
+        "g": "65399f681c89cec6",
+        "name": "",
+        "query": "",
+        "postgreSQLConfig": "ebec8c928981f01a",
+        "split": false,
+        "rowsPerMsg": 1,
+        "outputs": 1,
+        "x": 650,
+        "y": 320,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "77b7d41b1778802f",
+        "type": "mqtt out",
+        "z": "df2858be15eefc55",
+        "g": "2b8181ea80da634d",
+        "name": "MQTT recieve control ",
+        "topic": "home/command",
+        "qos": "",
+        "retain": "",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "cc6baff87bdbca5b",
+        "x": 780,
+        "y": 800,
+        "wires": []
+    },
+    {
+        "id": "92beca20075d6a31",
+        "type": "mqtt in",
+        "z": "df2858be15eefc55",
+        "g": "111e6b8e810b8106",
+        "name": "Alerts",
+        "topic": "smartHome/alerts/critical",
+        "qos": "2",
+        "datatype": "auto-detect",
+        "broker": "cc6baff87bdbca5b",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 150,
+        "y": 1080,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "3d23dc24c331423b",
+        "type": "http request",
+        "z": "df2858be15eefc55",
+        "g": "8ad2038b1b432a93",
+        "name": "",
+        "method": "POST",
+        "ret": "obj",
+        "paytoqs": "ignore",
+        "url": "http://14.225.224.167:8000/api/emergency_report",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": false,
+        "headers": [],
+        "x": 530,
+        "y": 180,
+        "wires": [
+            [
+                "bf55b2bd83ef9481"
+            ]
+        ]
+    },
+    {
+        "id": "379dabcb0db07e21",
+        "type": "function",
+        "z": "df2858be15eefc55",
+        "g": "8ad2038b1b432a93",
+        "name": "Gửi email",
+        "func": "let gas_level = msg.payload.gas;\nlet location = msg.payload.room || \"Nhà bếp\"; \nlet time = msg.payload.time || new Date().toLocaleString(\"vi-VN\");\n\nlet threshold = 1500; \n\n\nlet lastEmailTime = context.get(\"lastEmailTime\") || 0;\nlet currentTime = Date.now();\nlet cooldownPeriod = 5 * 60 * 1000; \n\n// Chỉ xử lý nếu gas vượt ngưỡng\nif (gas_level >= threshold) {\n    \n    \n    if (currentTime - lastEmailTime < cooldownPeriod) {\n        return null; \n    }\n\n    \n    context.set(\"lastEmailTime\", currentTime);\n\n    msg.topic = `[SMART HOME] CẢNH BÁO KHẨN CẤP: RÒ RỈ KHÍ GAS TẠI ${location.toUpperCase()}`;\n    msg.payload = `\n    <div style=\"font-family: Arial, sans-serif; max-width: 600px; margin: auto; border: 1px solid #ff4d4d; border-radius: 8px; overflow: hidden;\">\n        <div style=\"background-color: #ff4d4d; color: white; padding: 20px; text-align: center;\">\n            <h1 style=\"margin: 0; font-size: 24px;\">🚨 CẢNH BÁO RÒ RỈ KHÍ GAS</h1>\n        </div>\n        \n        <div style=\"padding: 20px; color: #333; line-height: 1.6;\">\n            <p>Chào bạn,</p>\n            <p>Hệ thống <b>Smart Home AI</b> vừa phát hiện nồng độ khí gas vượt ngưỡng an toàn tại khu vực: <b>${location}</b>.</p>\n            \n            <div style=\"background-color: #fff5f5; border-left: 5px solid #ff4d4d; padding: 15px; margin: 20px 0;\">\n                <table style=\"width: 100%; border-collapse: collapse;\">\n                    <tr>\n                        <td style=\"padding: 8px 0; border-bottom: 1px solid #eee;\"><b>Trạng thái:</b></td>\n                        <td style=\"padding: 8px 0; border-bottom: 1px solid #eee; color: #ff4d4d;\"><b>NGUY HIỂM</b></td>\n                    </tr>\n                    <tr>\n                        <td style=\"padding: 8px 0; border-bottom: 1px solid #eee;\"><b>Nồng độ đo được:</b></td>\n                        <td style=\"padding: 8px 0; border-bottom: 1px solid #eee;\"><b>${gas_level} ppm</b></td>\n                    </tr>\n                    <tr>\n                        <td style=\"padding: 8px 0; border-bottom: 1px solid #eee;\"><b>Ngưỡng cảnh báo:</b></td>\n                        <td style=\"padding: 8px 0; border-bottom: 1px solid #eee;\">${threshold} ppm</td>\n                    </tr>\n                    <tr>\n                        <td style=\"padding: 8px 0;\"><b>Thời gian:</b></td>\n                        <td>${time}</td>\n                    </tr>\n                </table>\n            </div>\n\n            <h3 style=\"color: #d93025;\">📢 Hành động khẩn cấp:</h3>\n            <ul style=\"padding-left: 20px;\">\n                <li>Kiểm tra ngay van gas và các thiết bị đun nấu.</li>\n                <li>Mở toàn bộ cửa sổ để thông gió.</li>\n                <li><b>Tuyệt đối không</b> bật/tắt các công tắc điện hoặc đánh lửa.</li>\n            </ul>\n        </div>\n\n        <div style=\"background-color: #f8f8f8; color: #777; padding: 15px; text-align: center; font-size: 12px;\">\n            <p>Đây là thông báo tự động từ hệ thống Smart Home của Võ Nhật Huy.<br>\n            Vui lòng không trả lời email này.</p>\n        </div>\n    </div>\n    `;\n    \n    return msg;\n}\n\nreturn null;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 560,
+        "y": 240,
+        "wires": [
+            [
+                "aea2fcdfbe6d341a"
+            ]
+        ]
+    },
+    {
+        "id": "bf55b2bd83ef9481",
+        "type": "debug",
+        "z": "df2858be15eefc55",
+        "g": "8ad2038b1b432a93",
+        "name": "debug 1",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 800,
+        "y": 180,
+        "wires": []
+    },
+    {
+        "id": "aea2fcdfbe6d341a",
+        "type": "e-mail",
+        "z": "df2858be15eefc55",
+        "g": "8ad2038b1b432a93",
+        "server": "smtp.gmail.com",
+        "port": "465",
+        "authtype": "BASIC",
+        "saslformat": false,
+        "token": "oauth2Response.access_token",
+        "secure": true,
+        "tls": false,
+        "name": "huyvo4709@gmail.com",
+        "dname": "send to email",
+        "x": 810,
+        "y": 220,
+        "wires": []
+    },
+    {
+        "id": "d59d9ab4932703c0",
+        "type": "function",
+        "z": "df2858be15eefc55",
+        "g": "8ad2038b1b432a93",
+        "name": "Alert",
+        "func": "\nconst THRESHOLDS = {\n    \"gas\": 2000,           \n    \"temperature\": 50,      \n    \"eco2\": 1500,          \n};\n\n// 2. Lấy dữ liệu từ payload (Giả sử ESP32 gửi lên object)\nlet data = msg.payload; \nlet room = data.location || \"Phòng không xác định\";\nlet alerts = [];\n\n// 3. Kiểm tra từng loại cảm biến\nif (data.gas > THRESHOLDS.gas) {\n    alerts.push({ metric: \"Khí Gas\", value: data.gas, unit: \"ppm\" });\n}\nif (data.temperature > THRESHOLDS.temperature) {\n    alerts.push({ metric: \"Nhiệt độ (Cảnh báo cháy)\", value: data.temperature, unit: \"°C\" });\n}\n\n// 4. Xử lý nếu có bất thường\nif (alerts.length > 0) {\n    let lastAlertTime = context.get('lastAlertTime') || 0;\n    let now = Date.now();\n\n    if (now - lastAlertTime > 30000) {\n        context.set('lastAlertTime', now);\n        msg.payload = {\n            room: room,\n            metric: alerts[0].metric, \n            value: alerts[0].value + alerts[0].unit,\n            full_alerts: alerts \n        };\n        \n        node.status({fill:\"red\", shape:\"dot\", text:\" ĐÃ GỬI BÁO ĐỘNG!\"});\n        return msg; \n    }\n} else {\n    node.status({fill:\"green\", shape:\"ring\", text:\"An toàn\"});\n}\n\nreturn null; ",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 390,
+        "y": 180,
+        "wires": [
+            [
+                "3d23dc24c331423b"
+            ]
+        ]
+    },
+    {
+        "id": "f296674a9be39cb2",
+        "type": "function",
+        "z": "df2858be15eefc55",
+        "g": "65399f681c89cec6",
+        "name": "function 3",
+        "func": "function removeAccents(str) {\n    return str.normalize('NFD')\n              .replace(/[\\u0300-\\u036f]/g, '')\n              .replace(/đ/g, 'd').replace(/Đ/g, 'D');\n}\n\nlet data = (typeof msg.payload === \"string\") ? JSON.parse(msg.payload) : msg.payload;\n\n// 2. Trích xuất User và Role an toàn\nlet cleanUser = removeAccents(data.user || \"Khach\");\nlet cleanRole = removeAccents(data.role || \"unknow\");\n\nmsg.payload = {\n    \"user\": String(cleanUser),\n    \"role\": String(cleanRole)\n};\n\nmsg.payload = JSON.stringify(msg.payload);\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 420,
+        "y": 520,
+        "wires": [
+            [
+                "7fbf40fc8aebae29"
+            ]
+        ]
+    },
+    {
+        "id": "7fbf40fc8aebae29",
+        "type": "mqtt out",
+        "z": "df2858be15eefc55",
+        "g": "65399f681c89cec6",
+        "name": "information",
+        "topic": "smarthome/camera/result",
+        "qos": "",
+        "retain": "",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "cc6baff87bdbca5b",
+        "x": 730,
+        "y": 520,
+        "wires": []
+    },
+    {
+        "id": "2132657f8ef5494b",
+        "type": "function",
+        "z": "df2858be15eefc55",
+        "g": "2b8181ea80da634d",
+        "name": "change state door",
+        "func": "// 1. Giải mã gói tin từ ESP32 gửi lên (Topic: home/status/device)\nlet data = (typeof msg.payload === \"string\") ? JSON.parse(msg.payload) : msg.payload;\n\nlet deviceId =  6; \nlet status = data.status;    \n\n\nmsg.query = \"UPDATE devices SET status = $1, updated_at = NOW() WHERE id = $2\";\nmsg.params = [status, deviceId];\nmsg.payload = {\n    \"id\": parseInt(deviceId),\n    \"status\": String(status)\n};\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 390,
+        "y": 640,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "15cd7040ceab88b1",
+        "type": "inject",
+        "z": "df2858be15eefc55",
+        "g": "65399f681c89cec6",
+        "name": "cập nhật cấu hình",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "{\"action\": \"reload_config\"}",
+        "payloadType": "json",
+        "x": 210,
+        "y": 520,
+        "wires": [
+            [
+                "9c28c12ad9cc4984"
+            ]
+        ]
+    },
+    {
+        "id": "cc6baff87bdbca5b",
+        "type": "mqtt-broker",
+        "name": "smart_home_mqtt",
+        "broker": "14.225.224.167",
+        "port": "1881",
+        "clientid": "",
+        "autoConnect": true,
+        "usetls": false,
+        "protocolVersion": 4,
+        "keepalive": 60,
+        "cleansession": true,
+        "autoUnsubscribe": true,
+        "birthTopic": "",
+        "birthQos": "0",
+        "birthRetain": "false",
+        "birthPayload": "",
+        "birthMsg": {},
+        "closeTopic": "",
+        "closeQos": "0",
+        "closeRetain": "false",
+        "closePayload": "",
+        "closeMsg": {},
+        "willTopic": "",
+        "willQos": "0",
+        "willRetain": "false",
+        "willPayload": "",
+        "willMsg": {},
+        "userProps": "",
+        "sessionExpiry": ""
+    },
+    {
+        "id": "119555e3aa202d29",
+        "type": "websocket-listener",
+        "path": "/ws/ui",
+        "wholemsg": "false"
+    },
+    {
+        "id": "c131fd516acf0d7e",
+        "type": "websocket-listener",
+        "path": "/ws/sensor",
+        "wholemsg": "false"
+    },
+    {
+        "id": "ebec8c928981f01a",
+        "type": "postgreSQLConfig",
+        "name": "",
+        "host": "aws-1-ap-southeast-2.pooler.supabase.com",
+        "hostFieldType": "str",
+        "port": "6543",
+        "portFieldType": "num",
+        "database": "postgres",
+        "databaseFieldType": "str",
+        "ssl": "{\"rejectUnauthorized\": false}",
+        "sslFieldType": "json",
+        "applicationName": "",
+        "applicationNameType": "str",
+        "max": 10,
+        "maxFieldType": "num",
+        "idle": 1000,
+        "idleFieldType": "num",
+        "connectionTimeout": 10000,
+        "connectionTimeoutFieldType": "num",
+        "user": "postgres.wnwqionibsdoqgowjujx",
+        "userFieldType": "str",
+        "password": "Vonhathuy31@",
+        "passwordFieldType": "str"
+    },
+    {
+        "id": "ed95e9613a069b4a",
+        "type": "global-config",
+        "env": [],
+        "modules": {
+            "node-red-contrib-postgresql": "0.15.4",
+            "node-red-contrib-aedes": "1.2.0",
+            "node-red-node-email": "5.2.2"
+        }
+    }
+]
