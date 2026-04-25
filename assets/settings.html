@@ -271,29 +271,41 @@
         </div>
     </div>
 
-    <script>
-        // Danh sách ID cấu hình cần lưu
-        const configKeys = [
-            "living-1", "living-2", "room1-1", "room1-2", "room2-1", "room2-2", "kitchen-1", "kitchen-2"
-        ];
+<script>
+        const idMapping = {
+            "living-1": 7, // Đèn Khách (ID trong DB là 7)
+            "living-2": 8, // Quạt Khách (ID trong DB là 8)
+            "room1-1": 1,  // Đèn Phòng Ngủ (ID trong DB là 1)
+            "room1-2": 2,  // Quạt Phòng Ngủ (ID trong DB là 2)
+            "room2-1": 5,  // Đèn Phòng Tắm (ID trong DB là 5)
+            "room2-2": null, // (Tạm thời DB chưa có Quạt phòng tắm, để null)
+            "kitchen-1": 4, // Quạt Bếp (ID trong DB là 4)
+            "kitchen-2": 3  // Đèn Bếp (ID trong DB là 3)
+        };
 
-        // 1. Tải cài đặt hiện tại từ PostgreSQL (API)
+        const configKeys = Object.keys(idMapping);
+
+        // 2. Tải cài đặt hiện tại từ PostgreSQL (API)
         async function loadSettings() {
             try {
-                const res = await fetch("http://127.0.0.1:8000/api/settings");
+                const res = await fetch("https://smarthome.vonhathuy.id.vn/api/settings");
                 if (res.ok) {
                     const json = await res.json();
                     if (json.status === "success" && json.data) {
                         const dbData = json.data;
-                        configKeys.forEach(key => {
-                            if (dbData[key]) {
-                                const nameEl = document.getElementById(`name-${key}`);
-                                const typeEl = document.getElementById(`type-${key}`);
-                                if (nameEl && dbData[key].name) nameEl.value = dbData[key].name;
-                                if (typeEl && dbData[key].type) typeEl.value = dbData[key].type;
+                        
+                        configKeys.forEach(htmlKey => {
+                            const dbId = idMapping[htmlKey];
+                            const dbKey = `dev_${dbId}`; // Tìm key "dev_7" trong dữ liệu API trả về
+
+                            if (dbId && dbData[dbKey]) {
+                                const nameEl = document.getElementById(`name-${htmlKey}`);
+                                const typeEl = document.getElementById(`type-${htmlKey}`);
                                 
-                                // Lưu đệm vào localStorage để trang home load nhanh
-                                localStorage.setItem(`dev_config_${key}`, JSON.stringify(dbData[key]));
+                                if (nameEl && dbData[dbKey].name) nameEl.value = dbData[dbKey].name;
+                                if (typeEl && dbData[dbKey].type) typeEl.value = dbData[dbKey].type;
+                                
+                                localStorage.setItem(`dev_config_${dbId}`, JSON.stringify(dbData[dbKey]));
                             }
                         });
                         return; // Done
@@ -303,40 +315,43 @@
                 console.warn("Không kết nối được server, dùng localStorage", error);
             }
             
-            // Fallback to localStorage if API fails
-            configKeys.forEach(key => {
-                const savedData = localStorage.getItem(`dev_config_${key}`);
+            // Fallback
+            configKeys.forEach(htmlKey => {
+                const dbId = idMapping[htmlKey];
+                const savedData = localStorage.getItem(`dev_config_${dbId}`);
                 if (savedData) {
                     try {
                         const parsed = JSON.parse(savedData);
-                        const nameEl = document.getElementById(`name-${key}`);
-                        const typeEl = document.getElementById(`type-${key}`);
+                        const nameEl = document.getElementById(`name-${htmlKey}`);
+                        const typeEl = document.getElementById(`type-${htmlKey}`);
                         if (nameEl && parsed.name) nameEl.value = parsed.name;
                         if (typeEl && parsed.type) typeEl.value = parsed.type;
                     } catch (e) { }
                 }
             });
         }
-
-        // 2. Lưu cài đặt vào PostgreSQL
         async function saveSettings() {
             const btnSave = document.getElementById("btn-save");
             btnSave.disabled = true;
             btnSave.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang lưu Database...';
 
             const payloadList = [];
-            configKeys.forEach(key => {
-                const nameVal = document.getElementById(`name-${key}`).value.trim();
-                const typeVal = document.getElementById(`type-${key}`).value;
+            
+            configKeys.forEach(htmlKey => {
+                const dbId = idMapping[htmlKey];
+                if (!dbId) return; // Bỏ qua nếu chưa map ID
+
+                const nameVal = document.getElementById(`name-${htmlKey}`).value.trim();
+                const typeVal = document.getElementById(`type-${htmlKey}`).value;
+                
                 if (nameVal) {
-                    payloadList.push({ device_id: key, name: nameVal, type: typeVal });
-                    // Lưu offline đồng thời
-                    localStorage.setItem(`dev_config_${key}`, JSON.stringify({ name: nameVal, type: typeVal }));
+                    payloadList.push({ device_id: `dev-${dbId}`, name: nameVal, type: typeVal });
+                   localStorage.setItem(`dev_config_${dbId}`, JSON.stringify({ name: nameVal, type: typeVal }));
                 }
             });
 
             try {
-                const res = await fetch("http://127.0.0.1:8000/api/settings", {
+                const res = await fetch("https://smarthome.vonhathuy.id.vn/api/settings", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ settings: payloadList })
@@ -352,10 +367,8 @@
             } catch (error) {
                 console.error("Lỗi khi lưu DB:", error);
             }
-
-            // Nếu lỗi server DB
             localStorage.setItem("device_names_updated", Date.now());
-            btnSave.innerHTML = '<i class="fa-solid fa-cloud-arrow-down"></i> Lưu Offline thành công (Cần bật DB)';
+            btnSave.innerHTML = '<i class="fa-solid fa-cloud-arrow-down"></i> Lưu Offline thành công';
             btnSave.style.background = "var(--accent-orange)";
             setTimeout(() => window.location.href = "home.html", 1500);
         }

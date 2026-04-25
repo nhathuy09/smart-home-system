@@ -91,7 +91,7 @@
             refreshBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang tải...';
             
             try {
-                const res = await fetch("http://127.0.0.1:8000/api/history?limit=50");
+                const res = await fetch("https://smarthome.vonhathuy.id.vn/api/history?limit=50");
                 if (res.ok) {
                     const json = await res.json();
                     const data = json.data;
